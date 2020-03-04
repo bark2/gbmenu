@@ -5,21 +5,24 @@
 #include <iostream>
 #include <istream>
 
+#include "mem.h"
+
+#include "instruction.h"
+
 using namespace std::chrono;
 constexpr u32 cpu_freq = 1048576;
 
-class Memory;
-class Instruction;
-
 struct Cpu {
-    u16 sp, pc;
+    bool int_master_enable; // enable the jump to the interrupt vectors.
+    u32  cc;
+    u16  sp, pc;
     union {
         u8 registers[16];
         struct {
             union {
                 u16 af;
                 struct {
-                    u8 flags;
+                    u8 flags; // 4 lsb always zero
                     u8 a;
                 };
             };
@@ -46,11 +49,6 @@ struct Cpu {
             };
         };
     };
-    bool int_master_enable; // enable the jump to the interrupt vectors.
-
-    // clock
-    const steady_clock::time_point init_time = steady_clock::now();
-    u32                            cc() const;
 
     void boot_sequence(Memory& mem);
 
@@ -76,5 +74,7 @@ struct Cpu {
     friend std::ostream& operator<<(std::ostream& o, const Cpu& cpu);
     friend string        to_string(const Cpu& cpu);
 
-    Instruction parse_next_inst(Memory& mem);
+    bool exec(u8 (*inst)());
 };
+
+extern Cpu cpu;

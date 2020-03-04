@@ -18,46 +18,48 @@
 // FF80-FFFE   High RAM (HRAM)
 // FFFF        Interrupt Enable Register
 
-struct Memory {
-    // Port/Mode registers
-    static constexpr u16 reg_p1   = 0xff00; // p1
-    static constexpr u16 reg_sb   = 0xff01; // sb
-    static constexpr u16 reg_sc   = 0xff02; // sc
-    static constexpr u16 reg_div  = 0xff04; // div
-    static constexpr u16 reg_tima = 0xff05; // tima
-    static constexpr u16 reg_tma  = 0xff06; // tma
-    static constexpr u16 reg_tac  = 0xff07; // tac
-    // LCD Registers
-    static constexpr u16 reg_nr10 = 0xff10; // nr10
-    static constexpr u16 reg_nr11 = 0xff11; // nr11
-    static constexpr u16 reg_nr12 = 0xff12; // nr12
-    static constexpr u16 reg_nr14 = 0xff14; // nr14
-    static constexpr u16 reg_nr21 = 0xff16; // nr21
-    static constexpr u16 reg_nr22 = 0xff17; // nr22
-    static constexpr u16 reg_nr24 = 0xff19; // nr24
-    static constexpr u16 reg_nr30 = 0xff1a; // nr30
-    static constexpr u16 reg_nr31 = 0xff1b; // nr31
-    static constexpr u16 reg_nr32 = 0xff1c; // nr32
-    static constexpr u16 reg_nr33 = 0xff1e; // nr33
-    static constexpr u16 reg_nr41 = 0xff20; // nr41
-    static constexpr u16 reg_nr42 = 0xff21; // nr42
-    static constexpr u16 reg_nr43 = 0xff22; // nr43
-    static constexpr u16 reg_nr44 = 0xff23; // nr44
-    static constexpr u16 reg_nr50 = 0xff24; // nr50
-    static constexpr u16 reg_nr51 = 0xff25; // nr51
-    static constexpr u16 reg_nr52 = 0xff26; // nr52
-    static constexpr u16 reg_lcdc = 0xff40; // lcdc
-    static constexpr u16 reg_scy  = 0xff42; // scy
-    static constexpr u16 reg_scx  = 0xff43; // scx
-    static constexpr u16 reg_lyc  = 0xff45; // lyc
-    static constexpr u16 reg_bgp  = 0xff47; // bgp
-    static constexpr u16 reg_obp0 = 0xff48; // obp0
-    static constexpr u16 reg_obp1 = 0xff49; // obp1
-    static constexpr u16 reg_wy   = 0xff4a; // wy
-    static constexpr u16 reg_wx   = 0xff4b; // wx
-    static constexpr u16 reg_if   = 0xff0f; // if
-    static constexpr u16 reg_ie   = 0xffff; // ie
+// Port/Mode registers
+static constexpr u16 mem_p1   = 0xff00; // p1
+static constexpr u16 mem_sb   = 0xff01; // sb
+static constexpr u16 mem_sc   = 0xff02; // sc
+static constexpr u16 mem_div  = 0xff04; // div
+static constexpr u16 mem_tima = 0xff05; // tima
+static constexpr u16 mem_tma  = 0xff06; // tma
+static constexpr u16 mem_tac  = 0xff07; // tac
+// LCD Registers
+static constexpr u16 mem_nr10 = 0xff10; // nr10
+static constexpr u16 mem_nr11 = 0xff11; // nr11
+static constexpr u16 mem_nr12 = 0xff12; // nr12
+static constexpr u16 mem_nr14 = 0xff14; // nr14
+static constexpr u16 mem_nr21 = 0xff16; // nr21
+static constexpr u16 mem_nr22 = 0xff17; // nr22
+static constexpr u16 mem_nr24 = 0xff19; // nr24
+static constexpr u16 mem_nr30 = 0xff1a; // nr30
+static constexpr u16 mem_nr31 = 0xff1b; // nr31
+static constexpr u16 mem_nr32 = 0xff1c; // nr32
+static constexpr u16 mem_nr33 = 0xff1e; // nr33
+static constexpr u16 mem_nr41 = 0xff20; // nr41
+static constexpr u16 mem_nr42 = 0xff21; // nr42
+static constexpr u16 mem_nr43 = 0xff22; // nr43
+static constexpr u16 mem_nr44 = 0xff23; // nr44
+static constexpr u16 mem_nr50 = 0xff24; // nr50
+static constexpr u16 mem_nr51 = 0xff25; // nr51
+static constexpr u16 mem_nr52 = 0xff26; // nr52
+static constexpr u16 mem_lcdc = 0xff40; // lcdc
+static constexpr u16 mem_stat = 0xff41; // stat
+static constexpr u16 mem_scy  = 0xff42; // scy
+static constexpr u16 mem_scx  = 0xff43; // scx
+static constexpr u16 mem_ly   = 0xff44; // ly
+static constexpr u16 mem_lyc  = 0xff45; // lyc
+static constexpr u16 mem_bgp  = 0xff47; // bgp
+static constexpr u16 mem_obp0 = 0xff48; // obp0
+static constexpr u16 mem_obp1 = 0xff49; // obp1
+static constexpr u16 mem_wy   = 0xff4a; // wy
+static constexpr u16 mem_wx   = 0xff4b; // wx
+static constexpr u16 mem_if   = 0xff0f; // if
+static constexpr u16 mem_ie   = 0xffff; // ie
 
+struct Memory {
     u8* buf;
 
     int
@@ -78,7 +80,7 @@ struct Memory {
 
     ~Memory() { free(buf); }
 
-    const u8&
+    constexpr const u8&
     read_byte(u16 addr) const
     {
         return buf[addr];
@@ -94,19 +96,18 @@ struct Memory {
     write_byte(u16 addr, u8 byte)
     {
         switch (addr) {
-        case reg_sc: {
+        case mem_scy: {
+            printf("scy: %d\n", byte);
+        } break;
+        case mem_sc: {
             if (byte == 0x81) {
-                // std::cout << conv_byte_hex(read_byte(reg_sb));
-                putchar(read_byte(reg_sb));
-                fflush(stdout);
+                // printf("serial: %c\n", read_byte(mem_sb));
+                printf("%c", read_byte(mem_sb));
             }
-            buf[addr] = byte;
         } break;
-        case reg_sb: {
-            buf[addr] = byte;
-        } break;
-        default: buf[addr] = byte;
+        default: break;
         }
+        buf[addr] = byte;
     }
 
     void
@@ -129,3 +130,4 @@ struct Memory {
     }
 };
 
+extern Memory mem;

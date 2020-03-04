@@ -7,13 +7,13 @@
 namespace misc {
 
 static inline u8
-nop(Cpu& cpu, Memory& mem)
+nop()
 {
     return 1;
 }
 
 static inline u8
-cpl(Cpu& cpu, Memory& mem)
+cpl()
 {
     u8 cc = 1;
 
@@ -25,7 +25,7 @@ cpl(Cpu& cpu, Memory& mem)
 }
 
 static inline u8
-ccf(Cpu& cpu, Memory& mem)
+ccf()
 {
     u8 cc = 1;
 
@@ -37,7 +37,7 @@ ccf(Cpu& cpu, Memory& mem)
 }
 
 static inline u8
-scf(Cpu& cpu, Memory& mem)
+scf()
 {
     u8 cc = 1;
 
@@ -51,7 +51,7 @@ scf(Cpu& cpu, Memory& mem)
 // Even if a DI instruction is executed in an interrupt routine, the IME flag isset if a return is
 // performed with a RETI instruction.
 static inline u8
-di(Cpu& cpu, Memory& mem)
+di()
 {
     u8 cc = 1;
 
@@ -64,7 +64,7 @@ di(Cpu& cpu, Memory& mem)
 // if control is returned from the interrupt routine bya RET instruction.  However, if an EI instruction
 // is executed in the interrupt routine, control is returned with IME = 1.
 static inline u8
-ei(Cpu& cpu, Memory& mem)
+ei()
 {
     u8 cc = 1;
 

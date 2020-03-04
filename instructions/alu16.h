@@ -3,76 +3,51 @@
 #include "../cpu.h"
 #include "../mem.h"
 #include "../types.h"
-
+#include "common.h"
 namespace alu16 {
 
-constexpr u16&
-get_reg16(Cpu& cpu, Memory& mem, u8 src)
-{
-    switch (src) {
-    case 0b000: return cpu.bc; break;
-    case 0b001: return cpu.de; break;
-    case 0b010: return cpu.hl; break;
-    case 0b011: return cpu.sp; break;
-    default: assert(0);
-    };
-}
-
-template <u8 src_reg>
+template <u8 src>
 static inline u8
-add_hl(Cpu& cpu, Memory& mem)
+add_hl()
 {
-    u16 src = get_reg16(cpu, mem, src_reg);
-    u32 res = cpu.hl + src;
-    u8  cc  = 2;
-
+    auto lhs = get_reg16(src);
+    u32  res = cpu.hl + lhs;
     cpu.set_n_flag(false);
-    cpu.set_h_flag((lower(cpu.hl) + lower(src)) > 0x100);
+    cpu.set_h_flag(((cpu.hl & 0xfff) + (lhs & 0xfff)) > 0xfff);
     cpu.set_c_flag(res > 0xffff);
-    cpu.hl = static_cast<u16>(res);
-
-    return cc;
+    cpu.hl = 0xffff & res;
+    return 2;
 }
 
 static inline u8
-add_sp(Cpu& cpu, Memory& mem)
+add_sp()
 {
-    s8  imm = mem.buf[cpu.pc++];
+    s8  imm = (s8)mem.read_byte(cpu.pc++);
     u32 res = cpu.sp + imm;
-    u8  cc  = 4;
-
     cpu.set_z_flag(false);
     cpu.set_n_flag(false);
-    cpu.set_h_flag(lower(cpu.sp) + imm > 0x100);
+    cpu.set_h_flag((cpu.sp & 0xfff) + imm > 0xfff);
     cpu.set_c_flag(res > 0xffff);
-    cpu.sp = static_cast<u16>(res);
-
-    return cc;
+    cpu.sp = 0xffff & res;
+    return 4;
 }
 
 template <u8 reg>
 static inline u8
-inc(Cpu& cpu, Memory& mem)
+inc()
 {
-    u16& dst = get_reg16(cpu, mem, reg);
-    u32  res = dst + 1;
-    u8   cc  = 2;
-
-    dst = static_cast<u16>(res);
-
-    return cc;
+    u32 res        = get_reg16(reg) + 1;
+    get_reg16(reg) = 0xffff & res;
+    return 2;
 }
 
 template <u8 reg>
 static inline u8
-dec(Cpu& cpu, Memory& mem)
+dec()
 {
-    u16& dst = get_reg16(cpu, mem, reg);
-    u32  res = dst - 1;
-    u8   cc  = 2;
-
-    dst = static_cast<u16>(res);
-
-    return cc;
+    u32 res        = get_reg16(reg) - 1;
+    get_reg16(reg) = 0xffff & res;
+    return 2;
 }
+
 } // namespace alu16

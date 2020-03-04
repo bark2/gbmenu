@@ -1,16 +1,17 @@
 #pragma once
 
 #include "types.h"
+
 static inline void
-set_bit(u8& addr, u8 bit, bool val)
+set_bit(u8& s, u8 i, bool val)
 {
-    addr &= (val << bit);
+    s = (s & ~(1 << i)) | (val << i);
 }
 
 static inline u8
-get_bit(u8& addr, u8 bit)
+get_bit(u8 s, u8 i)
 {
-    return addr | (1 << bit);
+    return s & (1 << i);
 }
 
 static inline u16
@@ -37,9 +38,10 @@ swap(u16 s)
     return concat(lower(s), higher(s));
 }
 
-static inline char dec_to_hex (u8 c) {
-    if (c < 10)
-        return c + '0';
+static inline char
+dec_to_hex(u8 c)
+{
+    if (c < 10) return c + '0';
     return c - 10 + 'a';
 }
 

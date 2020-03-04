@@ -8,13 +8,13 @@ namespace jp {
 
 template <bool is_rel>
 static inline u8
-jump(Cpu& cpu, Memory& mem)
+jump()
 {
     u8 cc = (is_rel ? 3 : 4);
     if constexpr (!is_rel)
         cpu.pc = mem.read_word(cpu.pc);
     else {
-        s8 imm = static_cast<s8>(mem.read_byte(cpu.pc++));
+        s8 imm = (s8)mem.read_byte(cpu.pc++);
         cpu.pc += imm;
     }
 
@@ -22,7 +22,7 @@ jump(Cpu& cpu, Memory& mem)
 }
 
 static inline u8
-jump_hl(Cpu& cpu, Memory& mem)
+jump_hl()
 {
     u8 cc = 1;
 
@@ -33,22 +33,13 @@ jump_hl(Cpu& cpu, Memory& mem)
 
 template <bool is_rel, u8 flag>
 static inline u8
-jump_if(Cpu& cpu, Memory& mem)
+jump_if()
 {
-    bool cond;
-    if constexpr (flag == 0b00) // nz
-        cond = !cpu.z_flag();
-    else if (flag == 0b01) // z
-        cond = cpu.z_flag();
-    else if (flag == 0b10) // nc
-        cond = !cpu.c_flag();
-    else // c
-        cond = cpu.c_flag();
-
-    u8 cc;
+    u8   cc;
+    bool cond = read_flag<flag>();
     if constexpr (is_rel) {
         cc     = 2;
-        s8 imm = static_cast<s8>(mem.read_byte(cpu.pc++));
+        s8 imm = (s8)mem.read_byte(cpu.pc++);
         if (cond) {
             cpu.pc += imm;
             cc = 3;

@@ -1,20 +1,26 @@
 #include "cpu.h"
-#include "instruction.h"
 #include "memory"
+
+#include "instruction.h"
+
 #include <cassert>
 #include <cstdio>
+#include <vector>
 
 using Int_t = Cpu::Int_t;
 
 void
 Cpu::boot_sequence(Memory& mem)
 {
+    cc = 0;
+
     af = 0x01B0;
     bc = 0x0013;
     de = 0x00D8;
     hl = 0x014D;
     sp = 0xFFFE;
     pc = 0x0100;
+
     mem.write_byte(0xff05, 0x00); // tima
     mem.write_byte(0xff05, 0x00); // tima
     mem.write_byte(0xff06, 0x00); // tma
@@ -52,84 +58,67 @@ Cpu::boot_sequence(Memory& mem)
 u8
 Cpu::get_flag(u8 flag)
 {
-    return (flags >> (flag + 4)) & 0x01;
+    return flags & (1 << flag);
 }
 
 void
 Cpu::set_flag(u8 flag, bool value)
 {
     if (value)
-        flags |= 1 << (flag + 4);
+        flags |= 1 << flag;
     else
-        flags &= ~(1 << (flag + 4));
+        flags &= ~(1 << flag);
 }
 
 u8
 Cpu::c_flag()
 {
-    return get_flag(0);
+    return get_flag(4);
 }
 
 void
 Cpu::set_c_flag(bool value)
 {
-    set_flag(0, value);
+    set_flag(4, value);
 }
 
 u8
 Cpu::h_flag()
 {
-    return get_flag(1);
+    return get_flag(5);
 }
 
 void
 Cpu::set_h_flag(bool value)
 {
-    set_flag(1, value);
+    set_flag(5, value);
 }
 
 u8
 Cpu::n_flag()
 {
-    return get_flag(2);
+    return get_flag(6);
 }
 
 void
 Cpu::set_n_flag(bool value)
 {
-    set_flag(2, value);
+    set_flag(6, value);
 }
 
 u8
 Cpu::z_flag()
 {
-    return get_flag(3);
+    return get_flag(7);
 }
 
 void
 Cpu::set_z_flag(bool value)
 {
-    return set_flag(3, value);
+    set_flag(7, value);
 }
 
 // enum Int_t { JOYPAD, SERIAL, TIMER, LCD_STAT, VERTICAL_BLANK, INT_T_COUNT };
-
-u8
-Cpu::get_Ie(Memory& mem, Int_t bit)
-{
-    auto b = mem.read_byte(Memory::reg_ie);
-    return b & bit;
-}
-
-void
-Cpu::set_Ie(Memory& mem, Int_t bit, bool val)
-{
-    auto prev = mem.read_byte(Memory::reg_ie);
-    if (val)
-        mem.write_byte(Memory::reg_ie, bit | prev);
-    else
-        mem.write_byte(Memory::reg_ie, (~bit) & prev);
-}
 
 string
 to_string(const Cpu& cpu)
@@ -149,13 +138,17 @@ operator<<(std::ostream& o, const Cpu& cpu)
     return o << to_string(cpu);
 }
 
-Instruction
-Cpu::parse_next_inst(Memory& mem)
-{
-    u8 reg_if = mem.read_byte(Memory::reg_if);
-    u8 reg_ie = mem.read_byte(Memory::reg_ie);
+// TODO: we can fetch until no jump ?
+// static std::vector<Instruction_Seq> queue;
 
-    if (int_master_enable && (reg_if & reg_ie)) {
+bool Cpu::exec(u8 (*inst)())
+{
+    u8 reg_if = mem.read_byte(mem_if);
+    u8 reg_ie = mem.read_byte(mem_ie);
+
+    if (int_master_enable && ((reg_if & 0x1f) & (reg_ie & 0x1f))) {
+        printf("interupt\n");
+        fflush(stdout);
         // enabled interupt is requested
         assert((reg_if & 0xe0) == 0x00);
         assert((reg_ie & 0xe0) == 0x00);
@@ -171,12 +164,13 @@ Cpu::parse_next_inst(Memory& mem)
             if ((reg_ie & (1 << i)) && (reg_if & (1 << i))) break;
 
         // unset the interupt request register
-        u8 new_reg_if = reg_if & ~(1 << i);
-        mem.write_byte(Memory::reg_if, new_reg_if);
+        mem.write_byte(reg_if, reg_if & ~(1 << i));
 
         pc = 0x40 + 0x8 * i;
     }
 
-    u8 addr = mem.read_byte(pc++);
-    return instructions[addr];
+    auto inst_cc = inst();
+    if (inst_cc == 100) return true; // unimplemented
+    cc += inst_cc;
+    return false;
 }

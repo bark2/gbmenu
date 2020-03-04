@@ -1,22 +1,27 @@
 [
 {
-  "directory": "/home/dania/gbmenu/build",
-  "command": "/mingw64/bin/c++.exe  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /mingw64/include -isystem /mingw64/include/QtWidgets -isystem /mingw64/include/QtGui -isystem /mingw64/include/QtCore -isystem /mingw64/share/qt5/mkspecs/win32-g++    -o CMakeFiles/gbmenu.dir/gb.cc.o -c /home/dania/gbmenu/gb.cc",
-  "file": "/home/dania/gbmenu/gb.cc"
+  "directory": "/home/bar/src/gbmenu/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/gb.cc.o -c /home/bar/src/gbmenu/gb.cc",
+  "file": "/home/bar/src/gbmenu/gb.cc"
 },
 {
-  "directory": "/home/dania/gbmenu/build",
-  "command": "/mingw64/bin/c++.exe  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /mingw64/include -isystem /mingw64/include/QtWidgets -isystem /mingw64/include/QtGui -isystem /mingw64/include/QtCore -isystem /mingw64/share/qt5/mkspecs/win32-g++    -o CMakeFiles/gbmenu.dir/cpu.cc.o -c /home/dania/gbmenu/cpu.cc",
-  "file": "/home/dania/gbmenu/cpu.cc"
+  "directory": "/home/bar/src/gbmenu/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/cpu.cc.o -c /home/bar/src/gbmenu/cpu.cc",
+  "file": "/home/bar/src/gbmenu/cpu.cc"
 },
 {
-  "directory": "/home/dania/gbmenu/build",
-  "command": "/mingw64/bin/c++.exe  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /mingw64/include -isystem /mingw64/include/QtWidgets -isystem /mingw64/include/QtGui -isystem /mingw64/include/QtCore -isystem /mingw64/share/qt5/mkspecs/win32-g++    -o CMakeFiles/gbmenu.dir/video.cc.o -c /home/dania/gbmenu/video.cc",
-  "file": "/home/dania/gbmenu/video.cc"
+  "directory": "/home/bar/src/gbmenu/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/ppu.cc.o -c /home/bar/src/gbmenu/ppu.cc",
+  "file": "/home/bar/src/gbmenu/ppu.cc"
 },
 {
-  "directory": "/home/dania/gbmenu/build",
-  "command": "/mingw64/bin/c++.exe  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /mingw64/include -isystem /mingw64/include/QtWidgets -isystem /mingw64/include/QtGui -isystem /mingw64/include/QtCore -isystem /mingw64/share/qt5/mkspecs/win32-g++    -o CMakeFiles/gbmenu.dir/instruction.cc.o -c /home/dania/gbmenu/instruction.cc",
-  "file": "/home/dania/gbmenu/instruction.cc"
+  "directory": "/home/bar/src/gbmenu/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/gui.cc.o -c /home/bar/src/gbmenu/gui.cc",
+  "file": "/home/bar/src/gbmenu/gui.cc"
+},
+{
+  "directory": "/home/bar/src/gbmenu/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/instruction.cc.o -c /home/bar/src/gbmenu/instruction.cc",
+  "file": "/home/bar/src/gbmenu/instruction.cc"
 }
 ]
