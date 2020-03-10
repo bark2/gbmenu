@@ -30,6 +30,7 @@ ret()
 {
     u8   cc   = 4;
     bool cond = true;
+    u16  addr = mem.read_word(cpu.sp);
 
     if constexpr (check_flag) {
         cond = read_flag<flag>();
@@ -37,7 +38,7 @@ ret()
     }
 
     if (cond) {
-        cpu.pc = mem.read_word(cpu.sp);
+        cpu.pc = addr;
         cpu.sp += 2;
     }
 

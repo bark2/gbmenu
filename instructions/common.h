@@ -3,26 +3,27 @@
 #include "../cpu.h"
 #include "../mem.h"
 
+enum { FLAG_NZ, FLAG_Z, FLAG_NC, FLAG_C, FLAG_COUNT };
+
 template <u8 flag>
 constexpr bool
 read_flag()
 {
     bool cond {};
-    static_assert(flag >= 0b00 && flag <= 0b11);
-    if constexpr (flag == 0b00) // nz
-        cond = !cpu.z_flag();
-    else if constexpr (flag == 0b01) // z
-        cond = cpu.z_flag();
-    else if constexpr (flag == 0b10) // nc
-        cond = !cpu.c_flag();
-    else if constexpr (flag == 0b11) // c
-        cond = cpu.c_flag();
+    static_assert(flag < FLAG_COUNT);
+    if constexpr (flag == FLAG_NZ) // nz
+        cond = !cpu.get_flag(Cpu::Flag::Z);
+    else if constexpr (flag == FLAG_Z) // z
+        cond = cpu.get_flag(Cpu::Flag::Z);
+    else if constexpr (flag == FLAG_NC) // nc
+        cond = !cpu.get_flag(Cpu::Flag::C);
+    else if constexpr (flag == FLAG_C) // c
+        cond = cpu.get_flag(Cpu::Flag::C);
 
     return cond;
 }
 
 enum { B, C, D, E, H, L, A, BC, DE, HL, SP, AF, IO_C, IO_N, NN, REG8_NONE };
-enum { FLAG_NZ, FLAG_Z, FLAG_NC, FLAG_C };
 
 constexpr u8&
 get_reg8(u8 src)

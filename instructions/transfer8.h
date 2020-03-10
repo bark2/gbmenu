@@ -67,7 +67,7 @@ static inline u8
 ld_a_io_c()
 {
     u8 cc  = 3;
-    u8 src = mem.read_io(cpu.c);
+    u8 src = mem.read_byte(0xff00 | cpu.c);
 
     cpu.a = src;
 
@@ -87,7 +87,7 @@ static inline u8
 ld_a_io_imm()
 {
     u8 cc  = 3;
-    u8 src = mem.read_io(mem.read_byte(cpu.pc++));
+    u8 src = mem.read_byte(0xff00 | mem.read_byte(cpu.pc++));
 
     cpu.a = src;
 

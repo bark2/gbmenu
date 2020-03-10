@@ -55,17 +55,27 @@ pop()
 static inline u8
 ldhl()
 {
-    u8  cc  = 3;
-    s8  imm = (s8)mem.read_byte(cpu.pc++);
-    u32 res = cpu.sp + imm;
-
+    s8   imm    = (s8)mem.read_byte(cpu.pc++);
+    u32  res    = static_cast<u32>((int)cpu.sp + (int)imm);
+    auto tmpVal = cpu.sp ^ ((s8)imm) ^ res;
     cpu.set_z_flag(false);
     cpu.set_n_flag(false);
-    cpu.set_h_flag((cpu.sp & 0xfff) + imm > 0xfff);
-    cpu.set_c_flag(res > 0xffff);
-    cpu.hl = res;
+    cpu.set_h_flag((tmpVal & 0x10) == 0x10);
+    cpu.set_c_flag((tmpVal & 0x100) == 0x100);
+    cpu.hl = 0xffff & res;
+    return 3;
 
-    return cc;
+    // u8  cc  = 3;
+    // s8  imm = (s8)mem.read_byte(cpu.pc++);
+    // u32 res = static_cast<u32>(cpu.sp + imm);
+
+    // cpu.set_z_flag(false);
+    // cpu.set_n_flag(false);
+    // cpu.set_h_flag((cpu.sp & 0xfff) + imm > 0xfff);
+    // cpu.set_c_flag(res > 0xffff);
+    // cpu.hl = res;
+
+    // return cc;
 }
 
 static inline u8

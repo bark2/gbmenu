@@ -2,7 +2,7 @@
 
 #include "types.h"
 
-static inline void
+constexpr void
 set_bit(u8& s, u8 i, bool val)
 {
     s = (s & ~(1 << i)) | (val << i);
@@ -21,21 +21,21 @@ concat(u8 hi, u8 lo)
 }
 
 static inline u8
-lower(u16 s)
+lower_byte(u16 s)
 {
-    return (s & 0x00ff);
+    return (s & 0xff);
+}
+
+static inline u16
+lower_word(u16 s)
+{
+    return (s & 0xffff);
 }
 
 static inline u8
 higher(u16 s)
 {
     return (s >> 8);
-}
-
-static inline u16
-swap(u16 s)
-{
-    return concat(lower(s), higher(s));
 }
 
 static inline char

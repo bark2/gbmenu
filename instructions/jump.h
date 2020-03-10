@@ -46,9 +46,11 @@ jump_if()
         }
     }
     else {
-        cc = 3;
+        cc       = 3;
+        u16 addr = mem.read_word(cpu.pc);
+        cpu.pc += 2;
         if (cond) {
-            cpu.pc = mem.read_word(cpu.pc);
+            cpu.pc = addr;
             cc     = 4;
         }
     }

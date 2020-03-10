@@ -18,15 +18,14 @@
 // FF80-FFFE   High RAM (HRAM)
 // FFFF        Interrupt Enable Register
 
-// Port/Mode registers
-static constexpr u16 mem_p1   = 0xff00; // p1
+static constexpr u16 mem_jp   = 0xff00; // joypad
 static constexpr u16 mem_sb   = 0xff01; // sb
 static constexpr u16 mem_sc   = 0xff02; // sc
 static constexpr u16 mem_div  = 0xff04; // div
 static constexpr u16 mem_tima = 0xff05; // tima
 static constexpr u16 mem_tma  = 0xff06; // tma
 static constexpr u16 mem_tac  = 0xff07; // tac
-// LCD Registers
+
 static constexpr u16 mem_nr10 = 0xff10; // nr10
 static constexpr u16 mem_nr11 = 0xff11; // nr11
 static constexpr u16 mem_nr12 = 0xff12; // nr12
@@ -45,6 +44,7 @@ static constexpr u16 mem_nr44 = 0xff23; // nr44
 static constexpr u16 mem_nr50 = 0xff24; // nr50
 static constexpr u16 mem_nr51 = 0xff25; // nr51
 static constexpr u16 mem_nr52 = 0xff26; // nr52
+
 static constexpr u16 mem_lcdc = 0xff40; // lcdc
 static constexpr u16 mem_stat = 0xff41; // stat
 static constexpr u16 mem_scy  = 0xff42; // scy
@@ -56,11 +56,21 @@ static constexpr u16 mem_obp0 = 0xff48; // obp0
 static constexpr u16 mem_obp1 = 0xff49; // obp1
 static constexpr u16 mem_wy   = 0xff4a; // wy
 static constexpr u16 mem_wx   = 0xff4b; // wx
-static constexpr u16 mem_if   = 0xff0f; // if
-static constexpr u16 mem_ie   = 0xffff; // ie
+
+static constexpr u16 mem_if = 0xff0f; // if
+static constexpr u16 mem_ie = 0xffff; // ie
 
 struct Memory {
     u8* buf;
+
+    // Bit 5 - P15 Select Button Keys      (0=Select)
+    // Bit 4 - P14 Select Direction Keys   (0=Select)
+    // Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
+    // Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
+    // Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)
+    // Bit 0 - P10 Input Right or Button A (0=Pressed) (Read Only)
+    enum struct Joypad : u8 { RIGHT = 0, LEFT, UP, DOWN, A, B, SELECT, START };
+    u8 jp;
 
     int
     init(const char* file_path)
@@ -80,9 +90,31 @@ struct Memory {
 
     ~Memory() { free(buf); }
 
-    constexpr const u8&
+    std::pair<u8, bool>
+    read_io(u8 offset) const
+    {
+        if (offset == (mem_jp & 0xf)) {
+            if ((buf[mem_jp] & 0x30) == 0x10)
+                return { (buf[mem_jp] & 0x30) | ((jp >> 4) & 0x0f), true };
+            else if ((buf[mem_jp] & 0x30) == 0x20)
+                return { (buf[mem_jp] & 0x30) | (jp & 0x0f), true };
+        }
+        return { 0, false };
+    }
+
+    void
+    write_io(u8 offset, u8 byte)
+    {
+        write_byte(0xff00 + offset, byte);
+    }
+
+    constexpr u8
     read_byte(u16 addr) const
     {
+        if (addr >= 0xff00) {
+            auto [reg, b] = read_io(addr & 0xf);
+            if (b) return reg;
+        }
         return buf[addr];
     }
 
@@ -96,13 +128,15 @@ struct Memory {
     write_byte(u16 addr, u8 byte)
     {
         switch (addr) {
+        case mem_div: {
+            byte = 0;
+        } break;
         case mem_scy: {
-            printf("scy: %d\n", byte);
         } break;
         case mem_sc: {
             if (byte == 0x81) {
-                // printf("serial: %c\n", read_byte(mem_sb));
-                printf("%c", read_byte(mem_sb));
+                printf("%c", buf[mem_sb]);
+		fflush(stdout);
             }
         } break;
         default: break;
@@ -113,20 +147,8 @@ struct Memory {
     void
     write_word(u16 addr, u16 word)
     {
-        write_byte(addr, lower(word));
-        write_byte(addr + 1, higher(word));
-    }
-
-    const u8&
-    read_io(u8 offset) const
-    {
-        return read_byte(0xff00 + offset);
-    }
-
-    void
-    write_io(u8 offset, u8 byte)
-    {
-        write_byte(0xff00 + offset, byte);
+        write_byte(addr, lower_byte(word));
+        write_byte(addr + 1, word >> 8);
     }
 };
 

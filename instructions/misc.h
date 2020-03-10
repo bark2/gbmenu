@@ -17,9 +17,9 @@ cpl()
 {
     u8 cc = 1;
 
-    cpu.a = ~cpu.a;
     cpu.set_n_flag(true);
     cpu.set_h_flag(true);
+    cpu.a = ~cpu.a;
 
     return cc;
 }
@@ -31,7 +31,7 @@ ccf()
 
     cpu.set_n_flag(false);
     cpu.set_h_flag(false);
-    cpu.set_c_flag(!cpu.c_flag());
+    cpu.set_c_flag(!(cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C));
 
     return cc;
 }
@@ -48,8 +48,6 @@ scf()
     return cc;
 }
 
-// Even if a DI instruction is executed in an interrupt routine, the IME flag isset if a return is
-// performed with a RETI instruction.
 static inline u8
 di()
 {
@@ -60,9 +58,6 @@ di()
     return cc;
 }
 
-// The IME flag is reset immediately after an interrupt occurs.  The IME flag reset remains in effect
-// if control is returned from the interrupt routine bya RET instruction.  However, if an EI instruction
-// is executed in the interrupt routine, control is returned with IME = 1.
 static inline u8
 ei()
 {

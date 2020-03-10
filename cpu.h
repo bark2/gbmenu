@@ -9,8 +9,14 @@
 
 #include "instruction.h"
 
-using namespace std::chrono;
 constexpr u32 cpu_freq = 1048576;
+
+static inline u32
+hz_to_cc(u32 freq)
+{
+    assert(cpu_freq > freq);
+    return cpu_freq / freq;
+}
 
 struct Cpu {
     bool int_master_enable; // enable the jump to the interrupt vectors.
@@ -57,18 +63,12 @@ struct Cpu {
     u8   get_Ie(Memory& mem, Int_t i);
     void set_Ie(Memory& mem, Int_t i, bool val);
 
-    // 0xffff
-    void int_flag();
-
-    u8   get_flag(u8 flag);
+    enum Flag : u8 { C = 4, H = 5, N = 6, Z = 7 };
+    u8   get_flag(Flag flag);
     void set_flag(u8 flag, bool value);
-    u8   c_flag();
     void set_c_flag(bool value);
-    u8   h_flag();
     void set_h_flag(bool value);
-    u8   n_flag();
     void set_n_flag(bool value);
-    u8   z_flag();
     void set_z_flag(bool value);
 
     friend std::ostream& operator<<(std::ostream& o, const Cpu& cpu);

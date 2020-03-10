@@ -24,9 +24,9 @@ add()
         rhs = get_reg8(src);
 
     u16 res = cpu.a + rhs;
-    cpu.set_z_flag(lower(res) == 0x00);
+    cpu.set_z_flag((res & 0xff) == 0x00);
     cpu.set_n_flag(false);
-    cpu.set_h_flag(((cpu.a & 0x0f) + (rhs & 0x0f)) > 0x10);
+    cpu.set_h_flag(((cpu.a & 0x0f) + (rhs & 0x0f)) > 0xf);
     cpu.set_c_flag(res > 0xff);
     cpu.a = res;
     return 1;
@@ -42,10 +42,11 @@ adc()
     else
         rhs = get_reg8(src);
 
-    u16 res = cpu.a + rhs + cpu.c_flag();
-    cpu.set_z_flag(lower(res) == 0x00);
+    auto c   = cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C;
+    u16  res = cpu.a + rhs + c;
+    cpu.set_z_flag(lower_byte(res) == 0x00);
     cpu.set_n_flag(false);
-    cpu.set_h_flag(((cpu.a & 0x0f) + (rhs & 0x0f) + cpu.c_flag()) > 0x10);
+    cpu.set_h_flag((cpu.a & 0x0f) + (rhs & 0x0f) + c > 0xf);
     cpu.set_c_flag(res > 0xff);
     cpu.a = res;
     return 1;
@@ -62,7 +63,7 @@ sub()
         rhs = get_reg8(src);
 
     u16 res = cpu.a - rhs;
-    cpu.set_z_flag(lower(res) == 0x00);
+    cpu.set_z_flag(lower_byte(res) == 0x00);
     cpu.set_n_flag(true);
     cpu.set_h_flag((cpu.a & 0x0f) < (rhs & 0x0f)); // half borrow
     cpu.set_c_flag(cpu.a < rhs);                   // borrow
@@ -74,19 +75,20 @@ template <bool imm, u8 src>
 static inline u8
 sbc()
 {
-    u8 rhs;
+    u16 rhs;
     if constexpr (imm)
         rhs = mem.read_byte(cpu.pc++);
     else
         rhs = get_reg8(src);
 
-    rhs += cpu.c_flag();
-    u16 res = cpu.a - rhs;
-    cpu.set_z_flag(lower(res) == 0x00);
+    u8  c   = cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C;
+    u16 res = cpu.a - rhs - c;
+    cpu.set_z_flag((res & 0xff) == 0x00);
     cpu.set_n_flag(true);
-    cpu.set_h_flag((cpu.a & 0x0f) < (rhs & 0x0f)); // half borrow
-    cpu.set_c_flag(cpu.a < rhs);                   // borrow
+    cpu.set_h_flag((cpu.a & 0x0f) < (rhs & 0x0f) + c); // half borrow
+    cpu.set_c_flag(cpu.a < rhs + c);                   // borrow
     cpu.a = res;
+
     return 1;
 }
 
@@ -158,7 +160,7 @@ cp()
         rhs = get_reg8(src);
 
     u16 res = cpu.a - rhs;
-    cpu.set_z_flag(lower(res) == 0x00);
+    cpu.set_z_flag(lower_byte(res) == 0x00);
     cpu.set_n_flag(true);
     cpu.set_h_flag((cpu.a & 0x0f) < (rhs & 0x0f)); // half borrow
     cpu.set_c_flag((cpu.a) < (rhs));               // borrow
@@ -171,7 +173,7 @@ inc()
 {
     auto& reg = get_reg8(src);
     u16   res = reg + 1;
-    cpu.set_z_flag(lower(res) == 0x00);
+    cpu.set_z_flag(lower_byte(res) == 0x00);
     cpu.set_n_flag(false);
     cpu.set_h_flag((reg & 0x0f) == 0x0f);
     reg = res;
@@ -184,8 +186,8 @@ dec()
 {
     auto& reg = get_reg8(src);
     u16   res = reg - 1;
-    cpu.set_z_flag(lower(res) == 0x00);
-    cpu.set_n_flag(false);
+    cpu.set_z_flag(lower_byte(res) == 0x00);
+    cpu.set_n_flag(true);
     cpu.set_h_flag((reg & 0x0f) == 0x00);
     reg = res;
     return 1;

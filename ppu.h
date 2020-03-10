@@ -8,10 +8,10 @@
 #include <iostream>
 #include <thread>
 
-using Color = u32;
+using Color    = u8;
+using RgbColor = u32;
 
-constexpr u32     vertical_refresh_clocks = 70224; // dbg mode
-array<Color, 160> lcd_get_line(const Memory& mem, u8 top, u8 left);
+constexpr u32 vertical_refresh_clocks = 70224; // dbg mode
 
 // lcdc
 // Bit 7 - LCD Display Enable             (0=Off, 1=On)
@@ -24,15 +24,21 @@ array<Color, 160> lcd_get_line(const Memory& mem, u8 top, u8 left);
 // Bit 0 - BG Display (for CGB see below) (0=Off, 1=On)
 
 static inline bool
-lcd_is_enabled(u8 lcdc)
+lcdc_is_enabled(u8 lcdc)
 {
     return get_bit(lcdc, 7);
 }
 
 static inline bool
-lcd_bg_enabled(u8 lcdc)
+lcdc_bg_enabled(u8 lcdc)
 {
     return get_bit(lcdc, 0);
+}
+
+static inline bool
+lcdc_obj_enabled(u8 lcdc)
+{
+    return get_bit(lcdc, 1);
 }
 
 // stat
@@ -46,6 +52,12 @@ lcd_bg_enabled(u8 lcdc)
 //           1: During V-Blank
 //           2: During Searching OAM-RAM
 //           3: During Transfering Data to LCD Driver
+
+static inline bool
+stat_ask_coincidence(u8 stat)
+{
+    return get_bit(stat, 6);
+}
 
 static inline bool
 stat_ask_oam(u8 stat)
@@ -65,15 +77,7 @@ stat_ask_hblank(u8 stat)
     return get_bit(stat, 3);
 }
 
-static inline bool
-stat_ask_coincidence(u8 stat)
-{
-    return get_bit(stat, 2);
-}
-
 //
 
-array<Color, 8>   get_bg_tile_line(const Memory& mem, u8 lcdc, u8 chr, u8 line);
-array<Color, 160> get_bg_line(const Memory& mem, u8 lcdc, u8 top, u8 left);
-// array<Color, 256> get_all_bg_line(const Memory& mem, u8 lcdc, u8 top_pixel);
-array<Color, 256> get_bg(u8 lcdc, u8 iy);
+array<Color, 160>    lcdc_bg_line(u8 lcdc, u8 top, u8 left);
+array<RgbColor, 160> render_line(const array<Color, 160>& line);

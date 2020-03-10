@@ -4,13 +4,13 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 
 #include <chrono>
 #include <thread>
 
 using std::array;
-
-static array<u32, 4> platte = { 0xc4f0c2, 0x5ab9a8, 0x1e606e, 0x2d1b00 };
+constexpr array<RgbColor, 4> platte = { 0xc4f0c2, 0x5ab9a8, 0x1e606e, 0x2d1b00 };
 
 /*
   LCD is 160x144 pixels
@@ -39,65 +39,102 @@ enum Screen_Mode {
     TRANSFARING = 3,
 };
 
-using Tile = array<array<Color, 8>, 8>;
+array<RgbColor, 8>
+render_line(array<Color, 160> line)
+{
+    array<RgbColor, 8> result;
+    std::transform(result.begin(), result.end(), line.begin(), [](auto shade) {
+        return platte[shade];
+    });
+    return result;
+}
 
 array<Color, 8>
-get_bg_tile_line(const Memory& mem, u8 lcdc, u8 tile, u8 line)
+get_bg_tile_line(const Memory& mem, u16 tile_addr, u8 line)
 {
     array<Color, 8> result;
-    auto tile_addr = get_bit(lcdc, 4) ? 0x8000 + 16 * tile : 0x9000 + 16 * (s8)tile;
-    u8   ls_bits   = mem.read_byte(tile_addr + 2 * line);
-    u8   ms_bits   = mem.read_byte(tile_addr + 2 * line + 1);
+    u8              ls_bits = mem.read_byte(tile_addr + 2 * line);
+    u8              ms_bits = mem.read_byte(tile_addr + 2 * line + 1);
     for (int i = 0; i < 8; i++) {
-        u8    shade     = ((((ms_bits >> i) & 1) << 1) | ((ls_bits >> i) & 1));
-        u8    color_num = mem.buf[mem_bgp] & (0b11 << (2 * shade)) >> (2 * shade);
-        Color color     = platte[color_num];
-        result[i]       = color;
+        u8 shade = ((ms_bits & 0x80) << 1) | (ls_bits & 0x80);
+        // u8 color_num = mem.buf[mem_bgp] & (0b11 << (2 * shade)) >> (2 * shade);
+        result[i] = shade;
+        ls_bits   = ls_bits << 1;
+        ms_bits   = ms_bits << 1;
     }
 
     return result;
 }
 
 array<Color, 160>
-get_bg_line(const Memory& mem, u8 lcdc, u8 top_pixel, u8 left_pixel)
+lcdc_bg_line(u8 lcdc, u8 top_pixel, u8 left_pixel)
 {
     array<Color, 160> result;
-    auto              is_bg_enabled = get_bit(lcdc, 0);
-    auto              bg_tile_map   = get_bit(lcdc, 3) ? 0x9c00 : 0x9800;
-    // for now background only
-    auto is_window_enabled = get_bit(lcdc, 5);
-    // auto is_obj_enabled    = get_bit(lcdc, 1);
-    // auto window_tile_map   = get_bit(lcdc, 6) ? 0x9c00 : 0x9900;
-
-    if (!is_bg_enabled)
+    if (!get_bit(lcdc, 0))
         std::fill(result.begin(), result.end(), platte[0]);
     else {
-        array<Color, 256> data_line;
-        u8                tile_y = top_pixel / 8;
-        for (int i = 0; i < 32; i++) {
-            u8 chr = mem.buf[bg_tile_map + 32 * tile_y + i];
-            ((array<Color, 8>*)data_line.data())[i] =
-                get_bg_tile_line(mem, lcdc, chr, top_pixel % 8);
+        auto bg_tile_map = get_bit(lcdc, 3) ? 0x9c00 : 0x9800;
+        for (int ix = 0; ix < 32; ix++) {
+            u16 offset    = 32 * std::floor(top_pixel / 8) + (left_pixel + ix) % 32;
+            u8  chr       = mem.buf[bg_tile_map + offset];
+            u16 tile_addr = get_bit(lcdc, 4) ? 0x8000 + 16 * chr : 0x9000 + 16 * (s8)chr;
+            ((array<Color, 8>*)result.data())[ix] =
+                get_bg_tile_line(mem, tile_addr, top_pixel % 8);
         }
-
-        for (int i = 0; i < 160; i++) result[i] = data_line[(left_pixel + i) % 256];
     }
-
     return result;
 }
 
-array<Color, 256>
-get_bg(u8 lcdc, u8 iy)
+struct Sprite {
+    u8 y;
+    u8 x;
+    u8 tile;
+    /*
+       Bit7   OBJ-to-BG Priority (0=OBJ Above BG, 1=OBJ Behind BG color 1-3)
+       (Used for both BG and Window. BG color 0 is always behind OBJ)
+       Bit6   Y flip          (0=Normal, 1=Vertically mirrored)
+       Bit5   X flip          (0=Normal, 1=Horizontally mirrored)
+       Bit4   Palette number  **Non CGB Mode Only** (0=OBP0, 1=OBP1)
+       Bit3   Tile VRAM-Bank  **CGB Mode Only**     (0=Bank 0, 1=Bank 1)
+       Bit2-0 Palette number  **CGB Mode Only**     (OBP0-7)
+       ***
+       render from right to left(left priority)
+       only 10 at a time, the left most ones
+    */
+    u8 flags;
+};
+
+void
+lcdc_obj_line(u8 lcdc, u8 top_pixel, array<Color, 160>& line)
 {
-    array<Color, 256> result;
-    std::fill(result.begin(), result.end(), platte[0]);
+    auto    sprite_size   = get_bit(lcdc, 2) ? 16 : 8;
+    Sprite* obj_atr_table = (Sprite*)&mem.buf[0xfe00];
 
-    auto bg_tile_map = get_bit(lcdc, 3) ? 0x9c00 : 0x9800;
-    for (int ix = 0; ix < 32; ix++) {
-        u8 offset                             = 32 * iy / 8 + ix;
-        u8 chr                                = mem.buf[bg_tile_map + offset];
-        ((array<Color, 8>*)result.data())[ix] = get_bg_tile_line(mem, lcdc, chr, iy % 8);
+    u8 sprite_ids[40];
+    for (int i = 0; i < 40; i++) sprite_ids[i] = i;
+
+    std::make_heap(sprite_ids, sprite_ids + 40, [=](u8 i1, u8 i2) {
+        // move to right all sprites which arent in the current scanline
+        bool i2_out = (obj_atr_table[i2].y >= top_pixel &&
+                       obj_atr_table[i2].y + sprite_size <= top_pixel);
+        return i2_out || obj_atr_table[i1].x < obj_atr_table[i2].x ||
+               (obj_atr_table[i1].x == obj_atr_table[i2].x && i1 < i2);
+    });
+
+    for (int i = 0; i < 30; i++) std::pop_heap(sprite_ids, sprite_ids + 40);
+
+    for (int i = 0; i < 10; i++) {
+        std::pop_heap(sprite_ids, sprite_ids + 40);
+        auto si = sprite_ids[0];
+        if (obj_atr_table[si].y != top_pixel) continue;
+        u16 tile_addr = 0x8000 + 2 * sprite_size * obj_atr_table[si].tile;
+
+        if (sprite_size == 8)
+            ((array<Color, 8>*)&line[sprite_ids[si].x]) =
+                get_obj_tile_line(mem, tile_addr, top_pixel % 8);
+        else
+            ((array<Color, 16>*)&line[sprite_ids[si].x]) =
+                get_big_obj_tile_line(mem, tile_addr, top_pixel % 16);
     }
-
     return result;
 }
