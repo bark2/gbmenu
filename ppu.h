@@ -80,4 +80,5 @@ stat_ask_hblank(u8 stat)
 //
 
 array<Color, 160>    lcdc_bg_line(u8 lcdc, u8 top, u8 left);
+array<Color, 160>    lcdc_obj_line(u8 lcdc, u8 top_pixel, array<Color, 160> line);
 array<RgbColor, 160> render_line(const array<Color, 160>& line);

@@ -8,12 +8,11 @@
 #include <cstdio>
 #include <vector>
 
-using Int_t = Cpu::Int_t;
-
 void
 Cpu::boot_sequence(Memory& mem)
 {
     cc = 0;
+    last_cc = 0;
 
     // af = 0x01B0;
     // bc = 0x0013;
@@ -103,7 +102,12 @@ Cpu::set_z_flag(bool value)
     set_flag(7, value);
 }
 
-// enum Int_t { JOYPAD, SERIAL, TIMER, LCD_STAT, VERTICAL_BLANK, INT_T_COUNT };
+void
+Cpu::set_interupt(Interupt i)
+{
+    set_bit(mem.buf[mem_if], (u8)i, true);
+    halt = false;
+}
 
 string
 to_string(const Cpu& cpu)
@@ -126,35 +130,48 @@ operator<<(std::ostream& o, const Cpu& cpu)
 // TODO: we can fetch until no jump ?
 // static std::vector<Instruction_Seq> queue;
 
-bool Cpu::exec(u8 (*inst)())
+bool
+Cpu::handle_interupts()
 {
     u8 reg_if = mem.read_byte(mem_if);
     u8 reg_ie = mem.read_byte(mem_ie);
 
     if (int_master_enable && ((reg_if & 0x1f) & (reg_ie & 0x1f))) {
-        // enabled interupt is requested
         assert((reg_if & 0xe0) == 0x00);
         assert((reg_ie & 0xe0) == 0x00);
         // all interrupts are now prohibited.
         int_master_enable = false;
         // the contents of the $pc are pushed onto the stack RAM.
         sp -= 2;
-        mem.write_word(sp, pc-1);
+        mem.write_word(sp, pc);
 
         // find the highest priority requested interupt
         int i;
         for (i = 0; i < 5; i++)
-            if (get_bit(reg_ie, i) && get_bit(reg_if, i)) break;
+            if (get_bit(reg_ie, i) && get_bit(reg_if, i))
+                break;
 
         // unset the interupt request register
         mem.write_byte(mem_if, reg_if & ~(1 << i));
 
         pc = 0x40 + (i << 3);
-        return false;
+        return true;
     }
+    return false;
+}
 
-    auto inst_cc = inst();
-    if (inst_cc == 100) return true; // unimplemented
-    cc += inst_cc;
+bool
+Cpu::exec()
+{
+    Instruction inst = instructions[mem.buf[cpu.pc]];
+    if (mem.buf[cpu.pc++] == 0xcb)
+        inst = prefix_cb_instructions[mem.buf[cpu.pc++]];
+    auto inst_cc = inst.fun();
+    if (inst_cc == 255)
+        return true; // unimplemented
+    assert(inst_cc < 10);
+
+    cc += 4 * inst_cc;
+    last_cc = 4 * inst_cc;
     return false;
 }

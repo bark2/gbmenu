@@ -82,7 +82,7 @@ struct Memory {
         FILE* in = fopen(file_path, "r");
         if (!in) return 1;
 
-        auto size = fread(buf, 1, 0x8000, in);
+        fread(buf, 1, 0x8000, in);
 
         fclose(in);
         return 0;
@@ -90,32 +90,20 @@ struct Memory {
 
     ~Memory() { free(buf); }
 
-    std::pair<u8, bool>
-    read_io(u8 offset) const
-    {
-        if (offset == (mem_jp & 0xf)) {
-            if ((buf[mem_jp] & 0x30) == 0x10)
-                return { (buf[mem_jp] & 0x30) | ((jp >> 4) & 0x0f), true };
-            else if ((buf[mem_jp] & 0x30) == 0x20)
-                return { (buf[mem_jp] & 0x30) | (jp & 0x0f), true };
-        }
-        return { 0, false };
-    }
-
-    void
-    write_io(u8 offset, u8 byte)
-    {
-        write_byte(0xff00 + offset, byte);
-    }
-
-    constexpr u8
+    u8
     read_byte(u16 addr) const
     {
-        if (addr >= 0xff00) {
-            auto [reg, b] = read_io(addr & 0xf);
-            if (b) return reg;
+        u8 result {};
+        switch (addr) {
+        case mem_jp: {
+            if ((buf[mem_jp] & 0x30) == 0x10)
+                result = (buf[mem_jp] & 0x30) | ((jp >> 4) & 0x0f);
+            else if ((buf[mem_jp] & 0x30) == 0x20)
+                result = (buf[mem_jp] & 0x30) | (jp & 0x0f);
+        } break;
+        default: result = buf[addr];
         }
-        return buf[addr];
+        return result;
     }
 
     u16
@@ -136,11 +124,12 @@ struct Memory {
         case mem_sc: {
             if (byte == 0x81) {
                 printf("%c", buf[mem_sb]);
-		fflush(stdout);
+                fflush(stdout);
             }
         } break;
         default: break;
         }
+
         buf[addr] = byte;
     }
 

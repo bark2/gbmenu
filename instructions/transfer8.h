@@ -11,6 +11,7 @@ template <u8 dst, u8 src>
 static inline u8
 ld_reg_reg()
 {
+    // FIXME: writing to HL could result to writing to io memory which should go throw write_byte
     get_reg8(dst) = get_reg8(src);
     return 1;
 }
@@ -66,7 +67,7 @@ ld_de_a()
 static inline u8
 ld_a_io_c()
 {
-    u8 cc  = 3;
+    u8 cc  = 2;
     u8 src = mem.read_byte(0xff00 | cpu.c);
 
     cpu.a = src;
@@ -78,7 +79,7 @@ static inline u8
 st_io_c_a()
 {
     u8 cc = 2;
-    mem.write_io(cpu.c, cpu.a);
+    mem.write_byte(0xff00 | cpu.c, cpu.a);
 
     return cc;
 }
@@ -97,8 +98,8 @@ ld_a_io_imm()
 static inline u8
 st_io_imm_a()
 {
-    u8 cc = 2;
-    mem.write_io(mem.read_byte(cpu.pc++), cpu.a);
+    u8 cc = 3;
+    mem.write_byte(0xff00 | mem.read_byte(cpu.pc++), cpu.a);
 
     return cc;
 }

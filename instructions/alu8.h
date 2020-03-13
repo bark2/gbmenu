@@ -17,11 +17,15 @@ template <bool imm, u8 src>
 static inline u8
 add()
 {
-    u8 rhs;
-    if constexpr (imm)
+    u8 cc, rhs;
+    if constexpr (imm) {
+        cc  = 2;
         rhs = mem.read_byte(cpu.pc++);
-    else
+    }
+    else {
+        cc  = (src == HL ? 2 : 1);
         rhs = get_reg8(src);
+    }
 
     u16 res = cpu.a + rhs;
     cpu.set_z_flag((res & 0xff) == 0x00);
@@ -29,18 +33,22 @@ add()
     cpu.set_h_flag(((cpu.a & 0x0f) + (rhs & 0x0f)) > 0xf);
     cpu.set_c_flag(res > 0xff);
     cpu.a = res;
-    return 1;
+    return cc;
 }
 
 template <bool imm, u8 src>
 static inline u8
 adc()
 {
-    u8 rhs;
-    if constexpr (imm)
+    u8 cc, rhs;
+    if constexpr (imm) {
+        cc  = 2;
         rhs = mem.read_byte(cpu.pc++);
-    else
+    }
+    else {
+        cc  = (src == HL ? 2 : 1);
         rhs = get_reg8(src);
+    }
 
     auto c   = cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C;
     u16  res = cpu.a + rhs + c;
@@ -49,18 +57,22 @@ adc()
     cpu.set_h_flag((cpu.a & 0x0f) + (rhs & 0x0f) + c > 0xf);
     cpu.set_c_flag(res > 0xff);
     cpu.a = res;
-    return 1;
+    return cc;
 }
 
 template <bool imm, u8 src>
 static inline u8
 sub()
 {
-    u8 rhs;
-    if constexpr (imm)
+    u8 cc, rhs;
+    if constexpr (imm) {
+        cc  = 2;
         rhs = mem.read_byte(cpu.pc++);
-    else
+    }
+    else {
+        cc  = (src == HL ? 2 : 1);
         rhs = get_reg8(src);
+    }
 
     u16 res = cpu.a - rhs;
     cpu.set_z_flag(lower_byte(res) == 0x00);
@@ -68,18 +80,22 @@ sub()
     cpu.set_h_flag((cpu.a & 0x0f) < (rhs & 0x0f)); // half borrow
     cpu.set_c_flag(cpu.a < rhs);                   // borrow
     cpu.a = res;
-    return 1;
+    return cc;
 }
 
 template <bool imm, u8 src>
 static inline u8
 sbc()
 {
-    u16 rhs;
-    if constexpr (imm)
+    u16 cc, rhs;
+    if constexpr (imm) {
+        cc  = 2;
         rhs = mem.read_byte(cpu.pc++);
-    else
+    }
+    else {
+        cc  = (src == HL ? 2 : 1);
         rhs = get_reg8(src);
+    }
 
     u8  c   = cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C;
     u16 res = cpu.a - rhs - c;
@@ -89,18 +105,22 @@ sbc()
     cpu.set_c_flag(cpu.a < rhs + c);                   // borrow
     cpu.a = res;
 
-    return 1;
+    return cc;
 }
 
 template <bool imm, u8 src>
 static inline u8
 and_inst()
 {
-    u8 rhs;
-    if constexpr (imm)
+    u8 cc, rhs;
+    if constexpr (imm) {
+        cc  = 2;
         rhs = mem.read_byte(cpu.pc++);
-    else
+    }
+    else {
+        cc  = (src == HL ? 2 : 1);
         rhs = get_reg8(src);
+    }
 
     u8 res = cpu.a & rhs;
     cpu.set_z_flag(res == 0x00);
@@ -108,18 +128,22 @@ and_inst()
     cpu.set_h_flag(true);
     cpu.set_c_flag(false);
     cpu.a = res;
-    return 1;
+    return cc;
 }
 
 template <bool imm, u8 src>
 static inline u8
 or_inst()
 {
-    u8 rhs;
-    if constexpr (imm)
+    u8 cc, rhs;
+    if constexpr (imm) {
+        cc  = 2;
         rhs = mem.read_byte(cpu.pc++);
-    else
+    }
+    else {
+        cc  = (src == HL ? 2 : 1);
         rhs = get_reg8(src);
+    }
 
     u8 res = cpu.a | rhs;
     cpu.set_z_flag(res == 0x00);
@@ -127,18 +151,22 @@ or_inst()
     cpu.set_h_flag(false);
     cpu.set_c_flag(false);
     cpu.a = res;
-    return 1;
+    return cc;
 }
 
 template <bool imm, u8 src>
 static inline u8
 xor_inst()
 {
-    u8 rhs;
-    if constexpr (imm)
+    u8 cc, rhs;
+    if constexpr (imm) {
+        cc  = 2;
         rhs = mem.read_byte(cpu.pc++);
-    else
+    }
+    else {
+        cc  = (src == HL ? 2 : 1);
         rhs = get_reg8(src);
+    }
 
     u8 res = cpu.a ^ rhs;
     cpu.set_z_flag(res == 0x00);
@@ -146,25 +174,29 @@ xor_inst()
     cpu.set_h_flag(false);
     cpu.set_c_flag(false);
     cpu.a = res;
-    return 1;
+    return cc;
 }
 
 template <bool imm, u8 src>
 static inline u8
 cp()
 {
-    u8 rhs;
-    if constexpr (imm)
+    u8 cc, rhs;
+    if constexpr (imm) {
+        cc  = 2;
         rhs = mem.read_byte(cpu.pc++);
-    else
+    }
+    else {
+        cc  = (src == HL ? 2 : 1);
         rhs = get_reg8(src);
+    }
 
     u16 res = cpu.a - rhs;
     cpu.set_z_flag(lower_byte(res) == 0x00);
     cpu.set_n_flag(true);
     cpu.set_h_flag((cpu.a & 0x0f) < (rhs & 0x0f)); // half borrow
     cpu.set_c_flag((cpu.a) < (rhs));               // borrow
-    return 1;
+    return cc;
 }
 
 template <u8 src>
@@ -177,7 +209,7 @@ inc()
     cpu.set_n_flag(false);
     cpu.set_h_flag((reg & 0x0f) == 0x0f);
     reg = res;
-    return 1;
+    return (src == HL ? 3 : 1);
 }
 
 template <u8 src>
@@ -190,7 +222,7 @@ dec()
     cpu.set_n_flag(true);
     cpu.set_h_flag((reg & 0x0f) == 0x00);
     reg = res;
-    return 1;
+    return (src == HL ? 3 : 1);
 }
 
 } // namespace alu8

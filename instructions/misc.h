@@ -68,4 +68,14 @@ ei()
     return cc;
 }
 
+static inline u8
+halt()
+{
+    u8 cc = 1;
+
+    cpu.halt = true;
+
+    return cc;
+}
+
 }

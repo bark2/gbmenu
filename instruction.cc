@@ -19,14 +19,14 @@ Instruction instructions[0x100] = {
     { 2, "ld b, d8", tr8::ld_reg_imm<B> },            // [0x06]
     { 1, "rlca", bits::rlc<A, false> },               // [0x07]
     { 3, "ld (a16), sp", tr16::st_sp },               // [0x08]
-    { 1, "add hl, bc", alu16::add_hl<BC> },           //
-    { 1, "ld a,(bc)", tr8::ld_a_bc },                 //
-    { 1, "dec bc", alu16::dec<BC> },                  //
-    { 1, "inc c", alu8::inc<C> },                     //
-    { 1, "dec c", alu8::dec<C> },                     //
-    { 2, "ld c, d8", tr8::ld_reg_imm<C> },            //
-    { 1, "rrca", bits::rrc<A, false> },               //
-    { 1, "stop", unimplemented },                     //
+    { 1, "add hl, bc", alu16::add_hl<BC> },           // [0x09]
+    { 1, "ld a,(bc)", tr8::ld_a_bc },                 // [0x0a]
+    { 1, "dec bc", alu16::dec<BC> },                  // [0x0b]
+    { 1, "inc c", alu8::inc<C> },                     // [0x0c]
+    { 1, "dec c", alu8::dec<C> },                     // [0x0d]
+    { 2, "ld c, d8", tr8::ld_reg_imm<C> },            // [0x0e]
+    { 1, "rrca", bits::rrc<A, false> },               // [0x0f]
+    { 1, "stop", unimplemented },                     // [0x10]
     { 3, "ld de, d16", tr16::ld_reg_imm<DE> },        //
     { 1, "ld (de), a", tr8::ld_de_a },                //
     { 1, "inc de", alu16::inc<DE> },                  //
@@ -128,7 +128,7 @@ Instruction instructions[0x100] = {
     { 1, "ld (hl), e", tr8::ld_reg_reg<HL, E> },      //
     { 1, "ld (hl), h", tr8::ld_reg_reg<HL, H> },      //
     { 1, "ld (hl), l", tr8::ld_reg_reg<HL, L> },      //
-    { 1, "halt", unimplemented },                     //
+    { 1, "halt", misc::halt },                        //
     { 1, "ld (hl), a", tr8::ld_reg_reg<HL, A> },      //
     { 1, "ld a, b", tr8::ld_reg_reg<A, B> },          //
     { 1, "ld a, c", tr8::ld_reg_reg<A, C> },          //

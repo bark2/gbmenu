@@ -12,7 +12,7 @@ static inline u8
 rl()
 {
     static_assert(PrefixCb | (!PrefixCb && (Reg == A)), "");
-    u8 cc = Reg == HL ? 4 : 2;
+    u8 cc = (PrefixCb ? 1 : Reg == HL ? 4 : 2);
 
     u8& reg = get_reg8(Reg);
     u8  c   = (cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C);
@@ -35,7 +35,7 @@ static inline u8
 rr()
 {
     static_assert(PrefixCb | (!PrefixCb && (Reg == A)), "");
-    u8 cc = Reg == HL ? 4 : 2;
+    u8 cc = (PrefixCb ? 1 : Reg == HL ? 4 : 2);
 
     u8& reg = get_reg8(Reg);
     u8  c   = (cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C);
@@ -58,7 +58,7 @@ static inline u8
 rrc()
 {
     static_assert(PrefixCb | (!PrefixCb && (Reg == A)), "");
-    u8 cc = Reg == HL ? 4 : 2;
+    u8 cc = (PrefixCb ? 1 : Reg == HL ? 4 : 2);
 
     u8& reg = get_reg8(Reg);
     u8  res = (reg >> 1) | (reg << 7);
@@ -132,7 +132,8 @@ static inline u8
 rlc()
 {
     static_assert(PrefixCb | (!PrefixCb && (Reg == A)), "");
-    u8    cc  = (Reg == HL ? 4 : 2);
+    u8    cc  = (PrefixCb ? 1 : Reg == HL ? 4 : 2);
+
     auto& reg = get_reg8(Reg);
     u8    c   = reg >> 7;
 
