@@ -7,6 +7,7 @@
 #include <QWidget>
 
 #include <atomic>
+#include <qnamespace.h>
 
 #include "mem.h"
 #include "types.h"
@@ -16,26 +17,43 @@ constexpr int scale_factor = 5;
 class Widget : public QWidget {
     constexpr static int                    width = 160, height = 144;
     const array<array<u32, width>, height>& surface;
-    void (*input_callback)(Memory::Joypad key);
+    void (*input_callback)(Memory::Joypad key, bool val);
 
     void
     keyPressEvent(QKeyEvent* event) override
     {
         switch (event->key()) {
-        case Qt::Key_L: input_callback(Memory::Joypad::RIGHT); break;
-        case Qt::Key_J: input_callback(Memory::Joypad::LEFT); break;
-        case Qt::Key_I: input_callback(Memory::Joypad::UP); break;
-        case Qt::Key_K: input_callback(Memory::Joypad::DOWN); break;
+        case Qt::Key_L: input_callback(Memory::Joypad::RIGHT, false); break;
+        case Qt::Key_J: input_callback(Memory::Joypad::LEFT, false); break;
+        case Qt::Key_I: input_callback(Memory::Joypad::UP, false); break;
+        case Qt::Key_K: input_callback(Memory::Joypad::DOWN, false); break;
 
-        case Qt::Key_S: input_callback(Memory::Joypad::A); break;
-        case Qt::Key_D: input_callback(Memory::Joypad::B); break;
-        case Qt::Key_A: input_callback(Memory::Joypad::SELECT); break;
-        case Qt::Key_W: input_callback(Memory::Joypad::START); break;
+        case Qt::Key_S: input_callback(Memory::Joypad::A, false); break;
+        case Qt::Key_D: input_callback(Memory::Joypad::B, false); break;
+        case Qt::Key_Backspace: input_callback(Memory::Joypad::SELECT, false); break;
+        case Qt::Key_Enter: input_callback(Memory::Joypad::START, false); break;
         // case Qt::Key_Escape: break;
         default: QWidget::keyPressEvent(event);
         }
     }
 
+    void
+    keyReleaseEvent(QKeyEvent* event) override
+    {
+        switch (event->key()) {
+        case Qt::Key_L: input_callback(Memory::Joypad::RIGHT, true); break;
+        case Qt::Key_J: input_callback(Memory::Joypad::LEFT, true); break;
+        case Qt::Key_I: input_callback(Memory::Joypad::UP, true); break;
+        case Qt::Key_K: input_callback(Memory::Joypad::DOWN, true); break;
+
+        case Qt::Key_S: input_callback(Memory::Joypad::A, true); break;
+        case Qt::Key_D: input_callback(Memory::Joypad::B, true); break;
+        case Qt::Key_Backspace: input_callback(Memory::Joypad::SELECT, true); break;
+        case Qt::Key_Enter: input_callback(Memory::Joypad::START, true); break;
+        // case Qt::Key_Escape: break;
+        default: QWidget::keyPressEvent(event);
+        }
+    }
     void
     paintEvent(QPaintEvent* event) override
     {
@@ -52,7 +70,7 @@ class Widget : public QWidget {
 
 public:
     Widget(const array<array<u32, width>, height>& surface_,
-           void (*input_callback_)(Memory::Joypad))
+           void (*input_callback_)(Memory::Joypad, bool))
         : surface(surface_), input_callback(input_callback_)
     {
         setFocusPolicy(Qt::StrongFocus);
@@ -68,7 +86,7 @@ gui_start(std::atomic<bool>&                      is_gui_alive,
           int                                     argc,
           char*                                   argv[],
           const array<array<u32, width>, height>& surface,
-          void (*input_callback)(Memory::Joypad))
+          void (*input_callback)(Memory::Joypad, bool))
 {
     QApplication q_app(argc, argv);
     QSplitter    splitter {};

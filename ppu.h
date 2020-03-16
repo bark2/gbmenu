@@ -79,6 +79,17 @@ stat_ask_hblank(u8 stat)
 
 //
 
-array<Color, 160>    lcdc_bg_line(u8 lcdc, u8 top, u8 left);
-array<Color, 160>    lcdc_obj_line(u8 lcdc, u8 top_pixel, array<Color, 160> line);
-array<RgbColor, 160> render_line(const array<Color, 160>& line);
+array<Color, 160>
+lcdc_render_line(u8 lcdc, u8 top, u8 left, const array<u8, 10>& sprites);
+// array<Color, 160> lcdc_obj_line(u8 lcdc, u8 top_pixel, array<Color, 160> line);
+array<u8, 10> lcdc_obj_line(u8 lcdc, u8 top_pixel);
+
+enum class Color_Platte { BG, PLATTE0, PLATTE1 };
+array<std::pair<Color, Color_Platte>, 160> lcdc_bg_line(u8 lcdc, u8 top, u8 left);
+// array<RgbColor, 160> render_line(const array<Color, 160>& line, Color_Platte cp);
+array<RgbColor, 160> render_line(const array<std::pair<Color, Color_Platte>, 160>& line);
+array<std::pair<Color, Color_Platte>, 160>
+lcdc_render_obj(u8                                         lcdc,
+                u8                                         iy,
+                const array<u8, 10>&                       sprite_ids,
+                array<std::pair<Color, Color_Platte>, 160> line);

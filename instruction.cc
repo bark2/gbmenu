@@ -10,125 +10,125 @@
 
 Instruction instructions[0x100] = {
     /* instruction-size, menmonic, instruction-fun */
-    { 1, "nop", misc::nop },                          // [0x00]
-    { 3, "ld bc, d16", tr16::ld_reg_imm<BC> },        // [0x01]
-    { 1, "ld (bc), a", tr8::ld_bc_a },                // [0x02]
-    { 1, "inc bc", alu16::inc<BC> },                  // [0x03]
-    { 1, "inc b", alu8::inc<B> },                     // [0x04]
-    { 1, "dec b", alu8::dec<B> },                     // [0x05]
-    { 2, "ld b, d8", tr8::ld_reg_imm<B> },            // [0x06]
-    { 1, "rlca", bits::rlc<A, false> },               // [0x07]
-    { 3, "ld (a16), sp", tr16::st_sp },               // [0x08]
-    { 1, "add hl, bc", alu16::add_hl<BC> },           // [0x09]
-    { 1, "ld a,(bc)", tr8::ld_a_bc },                 // [0x0a]
-    { 1, "dec bc", alu16::dec<BC> },                  // [0x0b]
-    { 1, "inc c", alu8::inc<C> },                     // [0x0c]
-    { 1, "dec c", alu8::dec<C> },                     // [0x0d]
-    { 2, "ld c, d8", tr8::ld_reg_imm<C> },            // [0x0e]
-    { 1, "rrca", bits::rrc<A, false> },               // [0x0f]
-    { 1, "stop", unimplemented },                     // [0x10]
-    { 3, "ld de, d16", tr16::ld_reg_imm<DE> },        //
-    { 1, "ld (de), a", tr8::ld_de_a },                //
-    { 1, "inc de", alu16::inc<DE> },                  //
-    { 1, "inc d", alu8::inc<D> },                     //
-    { 1, "dec d", alu8::dec<D> },                     //
-    { 2, "ld d, d8", tr8::ld_reg_imm<D> },            //
-    { 1, "rla", bits::rl<A, false> },                 //
-    { 2, "jr r8", jp::jump<true> },                   //
-    { 1, "add hl, de", alu16::add_hl<DE> },           //
-    { 1, "ld a, (de)", tr8::ld_a_de },                //
-    { 1, "dec de", alu16::dec<DE> },                  //
-    { 1, "inc e", alu8::inc<E> },                     //
-    { 1, "dec e", alu8::dec<E> },                     //
-    { 2, "ld e, d8", tr8::ld_reg_imm<E> },            //
-    { 1, "rra", bits::rr<A, false> },                 //
-    { 2, "jr nz, r8", jp::jump_if<true, FLAG_NZ> },   //
-    { 3, "ld hl, d16", tr16::ld_reg_imm<HL> },        //
-    { 1, "ld (hl+), a", tr8::ld_hli_a },              //
-    { 1, "inc hl", alu16::inc<HL> },                  //
-    { 1, "inc h", alu8::inc<H> },                     //
-    { 1, "dec h", alu8::dec<H> },                     //
-    { 2, "ld h, d8", tr8::ld_reg_imm<H> },            //
-    { 1, "daa", unimplemented },                      //
-    { 2, "jr z, r8", jp::jump_if<true, FLAG_Z> },     //
-    { 1, "add hl, hl", alu16::add_hl<HL> },           //
-    { 1, "ld a, (hl+)", tr8::ld_a_hli },              //
-    { 1, "dec hl", alu16::dec<HL> },                  //
-    { 1, "inc l", alu8::inc<L> },                     //
-    { 1, "dec l", alu8::dec<L> },                     //
-    { 2, "ld l, d8", tr8::ld_reg_imm<L> },            //
-    { 1, "cpl", misc::cpl },                          //
-    { 2, "jr nc, r8", jp::jump_if<true, FLAG_NC> },   //
-    { 3, "ld sp, d16", tr16::ld_reg_imm<SP> },        //
-    { 1, "ld (hl-), a", tr8::ld_hld_a },              //
-    { 1, "inc sp", alu16::inc<SP> },                  //
-    { 1, "inc (hl)", alu8::inc<HL> },                 //
-    { 1, "dec (hl)", alu8::dec<HL> },                 //
-    { 2, "ld (hl), d8", tr8::ld_reg_imm<HL> },        //
-    { 1, "scf", misc::scf },                          //
-    { 2, "jr c, r8", jp::jump_if<true, FLAG_C> },     //
-    { 1, "add hl, sp", alu16::add_hl<SP> },           //
-    { 1, "ld a, (hl-)", tr8::ld_a_hld },              //
-    { 1, "dec sp", alu16::dec<SP> },                  //
-    { 1, "inc a", alu8::inc<A> },                     //
-    { 1, "dec a", alu8::dec<A> },                     //
-    { 2, "ld a, d8", tr8::ld_reg_imm<A> },            //
-    { 1, "ccf", misc::ccf },                          //
-    { 1, "ld b, b", tr8::ld_reg_reg<B, B> },          //
-    { 1, "ld b, c", tr8::ld_reg_reg<B, C> },          //
-    { 1, "ld b, d", tr8::ld_reg_reg<B, D> },          //
-    { 1, "ld b, e", tr8::ld_reg_reg<B, E> },          //
-    { 1, "ld b, h", tr8::ld_reg_reg<B, H> },          //
-    { 1, "ld b, l", tr8::ld_reg_reg<B, L> },          //
-    { 1, "ld b, (hl)", tr8::ld_reg_reg<B, HL> },      //
-    { 1, "ld b, a", tr8::ld_reg_reg<B, A> },          //
-    { 1, "ld c, b", tr8::ld_reg_reg<C, B> },          //
-    { 1, "ld c, c", tr8::ld_reg_reg<C, C> },          //
-    { 1, "ld c, d", tr8::ld_reg_reg<C, D> },          //
-    { 1, "ld c, e", tr8::ld_reg_reg<C, E> },          //
-    { 1, "ld c, h", tr8::ld_reg_reg<C, H> },          //
-    { 1, "ld c, l", tr8::ld_reg_reg<C, L> },          //
-    { 1, "ld c, (hl)", tr8::ld_reg_reg<C, HL> },      //
-    { 1, "ld c, a", tr8::ld_reg_reg<C, A> },          //
-    { 1, "ld d, b", tr8::ld_reg_reg<D, B> },          //
-    { 1, "ld d, c", tr8::ld_reg_reg<D, C> },          //
-    { 1, "ld d, d", tr8::ld_reg_reg<D, D> },          //
-    { 1, "ld d, e", tr8::ld_reg_reg<D, E> },          //
-    { 1, "ld d, h", tr8::ld_reg_reg<D, H> },          //
-    { 1, "ld d, l", tr8::ld_reg_reg<D, L> },          //
-    { 1, "ld d, (hl)", tr8::ld_reg_reg<D, HL> },      //
-    { 1, "ld d, a", tr8::ld_reg_reg<D, A> },          //
-    { 1, "ld e, b", tr8::ld_reg_reg<E, B> },          //
-    { 1, "ld e, c", tr8::ld_reg_reg<E, C> },          //
-    { 1, "ld e, d", tr8::ld_reg_reg<E, D> },          //
-    { 1, "ld e, e", tr8::ld_reg_reg<E, E> },          //
-    { 1, "ld e, h", tr8::ld_reg_reg<E, H> },          //
-    { 1, "ld e, l", tr8::ld_reg_reg<E, L> },          //
-    { 1, "ld e, (hl)", tr8::ld_reg_reg<E, HL> },      //
-    { 1, "ld e, a", tr8::ld_reg_reg<E, A> },          //
-    { 1, "ld h, b", tr8::ld_reg_reg<H, B> },          //
-    { 1, "ld h, c", tr8::ld_reg_reg<H, C> },          //
-    { 1, "ld h, d", tr8::ld_reg_reg<H, D> },          //
-    { 1, "ld h, e", tr8::ld_reg_reg<H, E> },          //
-    { 1, "ld h, h", tr8::ld_reg_reg<H, H> },          //
-    { 1, "ld h, l", tr8::ld_reg_reg<H, L> },          //
-    { 1, "ld h, (hl)", tr8::ld_reg_reg<H, HL> },      //
-    { 1, "ld h, a", tr8::ld_reg_reg<H, A> },          //
-    { 1, "ld l, b", tr8::ld_reg_reg<L, B> },          //
-    { 1, "ld l, c", tr8::ld_reg_reg<L, C> },          //
-    { 1, "ld l, d", tr8::ld_reg_reg<L, D> },          //
-    { 1, "ld l, e", tr8::ld_reg_reg<L, E> },          //
-    { 1, "ld l, h", tr8::ld_reg_reg<L, H> },          //
-    { 1, "ld l, l", tr8::ld_reg_reg<L, L> },          //
-    { 1, "ld l, (hl)", tr8::ld_reg_reg<L, HL> },      //
-    { 1, "ld l,a", tr8::ld_reg_reg<L, A> },           //
-    { 1, "ld (hl), b", tr8::ld_reg_reg<HL, B> },      //
-    { 1, "ld (hl), c", tr8::ld_reg_reg<HL, C> },      //
-    { 1, "ld (hl), d", tr8::ld_reg_reg<HL, D> },      //
-    { 1, "ld (hl), e", tr8::ld_reg_reg<HL, E> },      //
-    { 1, "ld (hl), h", tr8::ld_reg_reg<HL, H> },      //
-    { 1, "ld (hl), l", tr8::ld_reg_reg<HL, L> },      //
-    { 1, "halt", misc::halt },                        //
+    { 1, "nop", misc::nop },                        // [0x00]
+    { 3, "ld bc, d16", tr16::ld_reg_imm<BC> },      // [0x01]
+    { 1, "ld (bc), a", tr8::ld_bc_a },              // [0x02]
+    { 1, "inc bc", alu16::inc<BC> },                // [0x03]
+    { 1, "inc b", alu8::inc<B> },                   // [0x04]
+    { 1, "dec b", alu8::dec<B> },                   // [0x05]
+    { 2, "ld b, d8", tr8::ld_reg_imm<B> },          // [0x06]
+    { 1, "rlca", bits::rlc<A, false> },             // [0x07]
+    { 3, "ld (a16), sp", tr16::st_sp },             // [0x08]
+    { 1, "add hl, bc", alu16::add_hl<BC> },         // [0x09]
+    { 1, "ld a,(bc)", tr8::ld_a_bc },               // [0x0a]
+    { 1, "dec bc", alu16::dec<BC> },                // [0x0b]
+    { 1, "inc c", alu8::inc<C> },                   // [0x0c]
+    { 1, "dec c", alu8::dec<C> },                   // [0x0d]
+    { 2, "ld c, d8", tr8::ld_reg_imm<C> },          // [0x0e]
+    { 1, "rrca", bits::rrc<A, false> },             // [0x0f]
+    { 1, "stop", unimplemented },                   // [0x10]
+    { 3, "ld de, d16", tr16::ld_reg_imm<DE> },      //
+    { 1, "ld (de), a", tr8::ld_de_a },              //
+    { 1, "inc de", alu16::inc<DE> },                //
+    { 1, "inc d", alu8::inc<D> },                   //
+    { 1, "dec d", alu8::dec<D> },                   //
+    { 2, "ld d, d8", tr8::ld_reg_imm<D> },          //
+    { 1, "rla", bits::rl<A, false> },               //
+    { 2, "jr r8", jp::jump<true> },                 //
+    { 1, "add hl, de", alu16::add_hl<DE> },         //
+    { 1, "ld a, (de)", tr8::ld_a_de },              //
+    { 1, "dec de", alu16::dec<DE> },                //
+    { 1, "inc e", alu8::inc<E> },                   //
+    { 1, "dec e", alu8::dec<E> },                   //
+    { 2, "ld e, d8", tr8::ld_reg_imm<E> },          //
+    { 1, "rra", bits::rr<A, false> },               //
+    { 2, "jr nz, r8", jp::jump_if<true, FLAG_NZ> }, //
+    { 3, "ld hl, d16", tr16::ld_reg_imm<HL> },      //
+    { 1, "ld (hl+), a", tr8::ld_hli_a },            //
+    { 1, "inc hl", alu16::inc<HL> },                //
+    { 1, "inc h", alu8::inc<H> },                   //
+    { 1, "dec h", alu8::dec<H> },                   //
+    { 2, "ld h, d8", tr8::ld_reg_imm<H> },          //
+    { 1, "daa", misc::nop },                        //
+    { 2, "jr z, r8", jp::jump_if<true, FLAG_Z> },   //
+    { 1, "add hl, hl", alu16::add_hl<HL> },         //
+    { 1, "ld a, (hl+)", tr8::ld_a_hli },            //
+    { 1, "dec hl", alu16::dec<HL> },                //
+    { 1, "inc l", alu8::inc<L> },                   //
+    { 1, "dec l", alu8::dec<L> },                   //
+    { 2, "ld l, d8", tr8::ld_reg_imm<L> },          //
+    { 1, "cpl", misc::cpl },                        //
+    { 2, "jr nc, r8", jp::jump_if<true, FLAG_NC> }, //
+    { 3, "ld sp, d16", tr16::ld_reg_imm<SP> },      //
+    { 1, "ld (hl-), a", tr8::ld_hld_a },            //
+    { 1, "inc sp", alu16::inc<SP> },                //
+    { 1, "inc (hl)", alu8::inc<HL> },               //
+    { 1, "dec (hl)", alu8::dec<HL> },               //
+    { 2, "ld (hl), d8", tr8::ld_reg_imm<HL> },      //
+    { 1, "scf", misc::scf },                        //
+    { 2, "jr c, r8", jp::jump_if<true, FLAG_C> },   //
+    { 1, "add hl, sp", alu16::add_hl<SP> },         //
+    { 1, "ld a, (hl-)", tr8::ld_a_hld },            //
+    { 1, "dec sp", alu16::dec<SP> },                //
+    { 1, "inc a", alu8::inc<A> },                   //
+    { 1, "dec a", alu8::dec<A> },                   //
+    { 2, "ld a, d8", tr8::ld_reg_imm<A> },          //
+    { 1, "ccf", misc::ccf },                        //
+    { 1, "ld b, b", tr8::ld_reg_reg<B, B> },        //
+    { 1, "ld b, c", tr8::ld_reg_reg<B, C> },        //
+    { 1, "ld b, d", tr8::ld_reg_reg<B, D> },        //
+    { 1, "ld b, e", tr8::ld_reg_reg<B, E> },        //
+    { 1, "ld b, h", tr8::ld_reg_reg<B, H> },        //
+    { 1, "ld b, l", tr8::ld_reg_reg<B, L> },        //
+    { 1, "ld b, (hl)", tr8::ld_reg_reg<B, HL> },    //
+    { 1, "ld b, a", tr8::ld_reg_reg<B, A> },        //
+    { 1, "ld c, b", tr8::ld_reg_reg<C, B> },        //
+    { 1, "ld c, c", tr8::ld_reg_reg<C, C> },        //
+    { 1, "ld c, d", tr8::ld_reg_reg<C, D> },        //
+    { 1, "ld c, e", tr8::ld_reg_reg<C, E> },        //
+    { 1, "ld c, h", tr8::ld_reg_reg<C, H> },        //
+    { 1, "ld c, l", tr8::ld_reg_reg<C, L> },        //
+    { 1, "ld c, (hl)", tr8::ld_reg_reg<C, HL> },    //
+    { 1, "ld c, a", tr8::ld_reg_reg<C, A> },        //
+    { 1, "ld d, b", tr8::ld_reg_reg<D, B> },        //
+    { 1, "ld d, c", tr8::ld_reg_reg<D, C> },        //
+    { 1, "ld d, d", tr8::ld_reg_reg<D, D> },        //
+    { 1, "ld d, e", tr8::ld_reg_reg<D, E> },        //
+    { 1, "ld d, h", tr8::ld_reg_reg<D, H> },        //
+    { 1, "ld d, l", tr8::ld_reg_reg<D, L> },        //
+    { 1, "ld d, (hl)", tr8::ld_reg_reg<D, HL> },    //
+    { 1, "ld d, a", tr8::ld_reg_reg<D, A> },        //
+    { 1, "ld e, b", tr8::ld_reg_reg<E, B> },        //
+    { 1, "ld e, c", tr8::ld_reg_reg<E, C> },        //
+    { 1, "ld e, d", tr8::ld_reg_reg<E, D> },        //
+    { 1, "ld e, e", tr8::ld_reg_reg<E, E> },        //
+    { 1, "ld e, h", tr8::ld_reg_reg<E, H> },        //
+    { 1, "ld e, l", tr8::ld_reg_reg<E, L> },        //
+    { 1, "ld e, (hl)", tr8::ld_reg_reg<E, HL> },    //
+    { 1, "ld e, a", tr8::ld_reg_reg<E, A> },        //
+    { 1, "ld h, b", tr8::ld_reg_reg<H, B> },        //
+    { 1, "ld h, c", tr8::ld_reg_reg<H, C> },        //
+    { 1, "ld h, d", tr8::ld_reg_reg<H, D> },        //
+    { 1, "ld h, e", tr8::ld_reg_reg<H, E> },        //
+    { 1, "ld h, h", tr8::ld_reg_reg<H, H> },        //
+    { 1, "ld h, l", tr8::ld_reg_reg<H, L> },        //
+    { 1, "ld h, (hl)", tr8::ld_reg_reg<H, HL> },    //
+    { 1, "ld h, a", tr8::ld_reg_reg<H, A> },        //
+    { 1, "ld l, b", tr8::ld_reg_reg<L, B> },        //
+    { 1, "ld l, c", tr8::ld_reg_reg<L, C> },        //
+    { 1, "ld l, d", tr8::ld_reg_reg<L, D> },        //
+    { 1, "ld l, e", tr8::ld_reg_reg<L, E> },        //
+    { 1, "ld l, h", tr8::ld_reg_reg<L, H> },        //
+    { 1, "ld l, l", tr8::ld_reg_reg<L, L> },        //
+    { 1, "ld l, (hl)", tr8::ld_reg_reg<L, HL> },    //
+    { 1, "ld l,a", tr8::ld_reg_reg<L, A> },         //
+    { 1, "ld (hl), b", tr8::ld_reg_reg<HL, B> },    //
+    { 1, "ld (hl), c", tr8::ld_reg_reg<HL, C> },    //
+    { 1, "ld (hl), d", tr8::ld_reg_reg<HL, D> },    //
+    { 1, "ld (hl), e", tr8::ld_reg_reg<HL, E> },    //
+    { 1, "ld (hl), h", tr8::ld_reg_reg<HL, H> },    //
+    { 1, "ld (hl), l", tr8::ld_reg_reg<HL, L> },    //
+    { 1, "halt", misc::halt },                      //
     { 1, "ld (hl), a", tr8::ld_reg_reg<HL, A> },      //
     { 1, "ld a, b", tr8::ld_reg_reg<A, B> },          //
     { 1, "ld a, c", tr8::ld_reg_reg<A, C> },          //

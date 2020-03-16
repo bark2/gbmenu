@@ -11,9 +11,7 @@ struct Instruction {
 static inline u8
 unimplemented()
 {
-    printf("Unimplemented!\n");
     return 255;
 }
 
 extern Instruction prefix_cb_instructions[], instructions[];
-

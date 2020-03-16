@@ -11,22 +11,22 @@
 void
 Cpu::boot_sequence(Memory& mem)
 {
-    cc = 0;
+    cc      = 0;
     last_cc = 0;
 
-    // af = 0x01B0;
-    // bc = 0x0013;
-    // de = 0x00D8;
-    // hl = 0x014D;
-    // sp = 0xFFFE;
-    // pc = 0x0100;
-
-    af = 0x1180;
-    bc = 0x0000;
-    de = 0x0008;
-    hl = 0x007c;
-    sp = 0xfffe;
+    af = 0x01B0;
+    bc = 0x0013;
+    de = 0x00D8;
+    hl = 0x014D;
+    sp = 0xFFFE;
     pc = 0x0100;
+
+    // af = 0x1180;
+    // bc = 0x0000;
+    // de = 0x0008;
+    // hl = 0x007c;
+    // sp = 0xfffe;
+    // pc = 0x0100;
 
     mem.write_byte(0xff05, 0x00); // tima
     mem.write_byte(0xff05, 0x00); // tima

@@ -3,6 +3,7 @@
 #include "bits.h"
 #include <cassert>
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 
 // 0000-3FFF   16KB ROM Bank 00     (in cartridge, fixed at bank 00)
@@ -51,6 +52,7 @@ static constexpr u16 mem_scy  = 0xff42; // scy
 static constexpr u16 mem_scx  = 0xff43; // scx
 static constexpr u16 mem_ly   = 0xff44; // ly
 static constexpr u16 mem_lyc  = 0xff45; // lyc
+static constexpr u16 mem_dma  = 0xff46; // dma
 static constexpr u16 mem_bgp  = 0xff47; // bgp
 static constexpr u16 mem_obp0 = 0xff48; // obp0
 static constexpr u16 mem_obp1 = 0xff49; // obp1
@@ -77,10 +79,12 @@ struct Memory {
     {
         auto mem_size = 0xffff;
         buf           = (u8*)calloc(mem_size, 1);
-        if (!buf) return 1;
+        if (!buf)
+            return 1;
 
         FILE* in = fopen(file_path, "r");
-        if (!in) return 1;
+        if (!in)
+            return 1;
 
         fread(buf, 1, 0x8000, in);
 
@@ -116,6 +120,10 @@ struct Memory {
     write_byte(u16 addr, u8 byte)
     {
         switch (addr) {
+        case mem_dma: {
+            u16 src = (byte << 8);
+            memcpy(&buf[0xfe00], &buf[src], &buf[0xfea0] - &buf[0xfe00]);
+        } break;
         case mem_div: {
             byte = 0;
         } break;
