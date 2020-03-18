@@ -100,13 +100,17 @@ struct Memory {
         u8 result {};
         switch (addr) {
         case mem_jp: {
-            if ((buf[mem_jp] & 0x30) == 0x10)
-                result = (buf[mem_jp] & 0x30) | ((jp >> 4) & 0x0f);
-            else if ((buf[mem_jp] & 0x30) == 0x20)
-                result = (buf[mem_jp] & 0x30) | (jp & 0x0f);
+            bool select_dir_keys    = get_bit(buf[mem_jp], 4);
+            bool select_buttom_keys = get_bit(buf[mem_jp], 5);
+            assert(select_dir_keys ^ select_buttom_keys);
+            if (select_dir_keys)
+                result = (buf[mem_jp] & 0xf0) | ((jp >> 4) & 0x0f);
+            else if (select_buttom_keys)
+                result = (buf[mem_jp] & 0xf0) | (jp & 0x0f);
         } break;
         default: result = buf[addr];
         }
+
         return result;
     }
 

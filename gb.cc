@@ -85,7 +85,7 @@ int
 main(int argc, char* argv[])
 {
     // auto err = mem.init("../cpu_instrs_tests/individual/01-special.gb");
-    auto err = mem.init("../cpu_instrs_tests/individual/02-interrupts.gb"); // ok
+    // auto err = mem.init("../cpu_instrs_tests/individual/02-interrupts.gb"); // ok
     // auto err = mem.init("../cpu_instrs_tests/individual/03-op sp,hl.gb"); // ok
     // auto err = mem.init("../cpu_instrs_tests/individual/04-op r,imm.gb"); // ok
     // auto err = mem.init("../cpu_instrs_tests/individual/05-op rp.gb");    // ok
@@ -96,29 +96,30 @@ main(int argc, char* argv[])
     // auto err = mem.init("../cpu_instrs_tests/individual/10-bit ops.gb");  // ok
     // auto err = mem.init("../cpu_instrs_tests/individual/11-op a,(hl).gb"); // daa
     // auto err = mem.init("../rom/tetris.gb");
-    // auto err = mem.init("../rom/Dr. Mario (JU) (V1.1).gb");
+    auto err = mem.init("../rom/Dr. Mario (JU) (V1.1).gb");
+    // auto err = mem.init("../rom/pokemon-blue.gb");
     if (err)
         return 1;
 
     cpu.boot_sequence(mem);
 
     struct {
-        std::chrono::time_point<std::chrono::steady_clock, cc_duration> last_time;
-        u32                                                             last_cc;
+        Time_Point                       last_time;
+        u32                              last_cc;
         bool                             curr_line_finished;
         array<array<RgbColor, 160>, 144> pixels;
     } lcd {};
+    printf("pixels: %p\n",lcd.pixels.data());
 
-    std::chrono::time_point<std::chrono::steady_clock, cc_duration> last_time =
-        std::chrono::time_point_cast<cc_duration>(std::chrono::steady_clock::now());
+    Time_Point last_time = now();
     struct {
-        u32                                                             last_cc;
-        std::chrono::time_point<std::chrono::steady_clock, cc_duration> last_time;
+        u32        last_cc;
+        Time_Point last_time;
     } timer {};
     struct {
-        u32                                                             last_cc;
-        std::chrono::time_point<std::chrono::steady_clock, cc_duration> last_time;
-        u32                                                             freq;
+        u32        last_cc;
+        Time_Point last_time;
+        u32        freq;
     } divider { {}, {}, 16384 };
 
     std::atomic<bool> is_gui_alive { true };
@@ -139,10 +140,10 @@ main(int argc, char* argv[])
                 gui.join();
         }
 
-        auto now =
-            std::chrono::time_point_cast<cc_duration>(std::chrono::steady_clock::now());
-        while ((now - last_time).count() < cpu.last_cc)
+        auto now_cc = now();
+        for (; (now_cc - last_time).count() < cpu.last_cc; now_cc = now())
             ;
+        last_time = now_cc;
 
         if (!strcmp(breakpoint.reg, "pc") && cpu.pc == breakpoint.val)
             breakpoint.reached = true;
@@ -163,16 +164,7 @@ main(int argc, char* argv[])
                     std::cout << "unimplemented:\n" << info(cpu, mem, pc) << "\n";
                 }
 
-        if (!cpu.halt && (cpu.cc - divider.last_cc > hz_to_cc(divider.freq))) {
-            divider.last_cc   = cpu.cc;
-            divider.last_time = now;
-            mem.buf[mem_div]++;
-        }
-        else if (auto [times, reminder] = div(now, divider.last_time, divider.freq);
-                 cpu.halt && times > 0) {
-            divider.last_time = now - cc_duration(reminder);
-            mem.buf[mem_div] += times;
-        }
+        run_with_freq(divider, divider.freq, [&]() { mem.buf[mem_div]++; });
 
         if (get_bit(mem.buf[mem_tac], 2)) {
             u32 timer_freq;
@@ -182,27 +174,6 @@ main(int argc, char* argv[])
             case 0b10: timer_freq = 65536; break;
             case 0b11: timer_freq = 16384; break;
             }
-
-            // if (!cpu.halt && (cpu.cc - timer.last_cc > hz_to_cc(timer_freq))) {
-            // timer.last_cc   = cpu.cc;
-            // timer.last_time = now;
-            // mem.buf[mem_tima]++;
-            // if (!mem.buf[mem_tima]) {
-            // mem.buf[mem_tima] = mem.buf[mem_tma];
-            // cpu.set_interupt(Cpu::Interupt::TIMER);
-            // }
-            // }
-            // else if (auto [times, rem] = div(now, timer.last_time, timer_freq);
-            // cpu.halt && times > 0) {
-            // while (times--) {
-            // mem.buf[mem_tima]++;
-            // if (!mem.buf[mem_tima]) {
-            // mem.buf[mem_tima] = mem.buf[mem_tma];
-            // cpu.set_interupt(Cpu::Interupt::TIMER);
-            // }
-            // }
-            // timer.last_time = now - cc_duration(rem);
-            // }
 
             run_with_freq(timer, timer_freq, []() {
                 mem.buf[mem_tima]++;
@@ -233,7 +204,7 @@ main(int argc, char* argv[])
                     auto scx = mem.buf[mem_scx];
                     auto scy = mem.buf[mem_scy];
                     // mode2
-                    array<u8, 10> sprites;
+                    std::pair<array<u8, 10>, u8> sprites;
                     if (lcdc_obj_enabled(lcdc))
                         sprites = lcdc_obj_line(lcdc, (ly + scy) % 256);
                     // mode3
@@ -241,8 +212,11 @@ main(int argc, char* argv[])
                     if (lcdc_obj_enabled(lcdc))
                         color_line =
                             lcdc_render_obj(lcdc, (ly + scy) % 256, sprites, color_line);
-                    // if(status.window_display_enable) cgb_render_window();
-                    // does sprites and bg-tiles have different color pallate?
+
+                    if (lcdc_window_enabled(lcdc)) {
+                        // lcdc_render_window();
+                        printf("window\n");
+                    }
                     lcd.pixels[ly] = render_line(color_line);
                 }
                 else {
@@ -256,7 +230,6 @@ main(int argc, char* argv[])
                 }
 
                 mem.buf[mem_ly] = (ly + 1) % 154;
-                lcd.last_time   = now;
             }); // cpu.cc - lcd.last_cc > line cc
             mem.buf[mem_stat] = stat;
         } // lcd is enabled

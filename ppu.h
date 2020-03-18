@@ -41,6 +41,12 @@ lcdc_obj_enabled(u8 lcdc)
     return get_bit(lcdc, 1);
 }
 
+static inline bool
+lcdc_window_enabled(u8 lcdc)
+{
+    return get_bit(lcdc, 5);
+}
+
 // stat
 // Bit 6 - LYC=LY Coincidence Interrupt (1=Enable) (Read/Write)
 // Bit 5 - Mode 2 OAM Interrupt         (1=Enable) (Read/Write)
@@ -82,14 +88,14 @@ stat_ask_hblank(u8 stat)
 array<Color, 160>
 lcdc_render_line(u8 lcdc, u8 top, u8 left, const array<u8, 10>& sprites);
 // array<Color, 160> lcdc_obj_line(u8 lcdc, u8 top_pixel, array<Color, 160> line);
-array<u8, 10> lcdc_obj_line(u8 lcdc, u8 top_pixel);
+std::pair<array<u8, 10>, u8> lcdc_obj_line(u8 lcdc, u8 top_pixel);
 
-enum class Color_Platte { BG, PLATTE0, PLATTE1 };
+enum class Color_Platte { BG, OBP0, OBP1 };
 array<std::pair<Color, Color_Platte>, 160> lcdc_bg_line(u8 lcdc, u8 top, u8 left);
 // array<RgbColor, 160> render_line(const array<Color, 160>& line, Color_Platte cp);
 array<RgbColor, 160> render_line(const array<std::pair<Color, Color_Platte>, 160>& line);
 array<std::pair<Color, Color_Platte>, 160>
 lcdc_render_obj(u8                                         lcdc,
                 u8                                         iy,
-                const array<u8, 10>&                       sprite_ids,
+                const std::pair<array<u8, 10>, u8>&        sprite_ids,
                 array<std::pair<Color, Color_Platte>, 160> line);

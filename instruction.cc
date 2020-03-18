@@ -49,7 +49,7 @@ Instruction instructions[0x100] = {
     { 1, "inc h", alu8::inc<H> },                   //
     { 1, "dec h", alu8::dec<H> },                   //
     { 2, "ld h, d8", tr8::ld_reg_imm<H> },          //
-    { 1, "daa", misc::nop },                        //
+    { 1, "daa", misc::daa },                        //
     { 2, "jr z, r8", jp::jump_if<true, FLAG_Z> },   //
     { 1, "add hl, hl", alu16::add_hl<HL> },         //
     { 1, "ld a, (hl+)", tr8::ld_a_hli },            //

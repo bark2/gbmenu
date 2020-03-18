@@ -13,6 +13,34 @@ nop()
 }
 
 static inline u8
+daa()
+{
+    u8 cc = 1;
+
+    if (!cpu.get_flag(Cpu::N)) {
+        if (cpu.get_flag(Cpu::C) || cpu.a > 0x99) {
+            cpu.a += 0x60;
+            cpu.set_c_flag(true);
+        }
+        if (cpu.get_flag(Cpu::H) || (cpu.a & 0x0f) > 0x09) {
+            cpu.a += 0x6;
+        }
+    }
+    else {
+        if (cpu.get_flag(Cpu::C)) {
+            cpu.a -= 0x60;
+        }
+        if (cpu.get_flag(Cpu::H)) {
+            cpu.a -= 0x6;
+        }
+    }
+    cpu.set_z_flag(cpu.a == 0);
+    cpu.set_h_flag(false);
+
+    return cc;
+}
+
+static inline u8
 cpl()
 {
     u8 cc = 1;
@@ -73,6 +101,7 @@ halt()
 {
     u8 cc = 1;
 
+    // printf("halt\n");
     cpu.halt = true;
 
     return cc;

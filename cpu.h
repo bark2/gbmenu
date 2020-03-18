@@ -9,16 +9,6 @@
 
 #include "instruction.h"
 
-constexpr u32 cpu_freq = 4 * 1048576;
-using cc_duration      = std::chrono::duration<int, std::ratio<1, cpu_freq>>;
-
-static inline u32
-hz_to_cc(u32 freq)
-{
-    assert(cpu_freq > freq);
-    return cpu_freq / freq;
-}
-
 struct Cpu {
     u32 cc;
     u16 sp, pc;

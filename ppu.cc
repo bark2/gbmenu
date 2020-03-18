@@ -49,26 +49,26 @@ render_line(const array<std::pair<Color, Color_Platte>, 160>& line)
         u16 platte_register;
         switch (cp) {
         case Color_Platte::BG: platte_register = mem_bgp; break;
-        case Color_Platte::PLATTE0: platte_register = mem_obp0; break;
-        case Color_Platte::PLATTE1: platte_register = mem_obp1; break;
+        case Color_Platte::OBP0: platte_register = mem_obp0; break;
+        case Color_Platte::OBP1: platte_register = mem_obp1; break;
         }
 
         result[i] =
             platte[(mem.buf[platte_register] & (0b11 << (2 * color))) >> (2 * color)];
-        // return platte[color];
     }
     return result;
 }
 
-array<Color, 8>
+template <Color_Platte platte>
+array<std::pair<Color, Color_Platte>, 8>
 get_tile_line(const Memory& mem, u16 tile_addr, u8 line)
 {
-    array<Color, 8> result;
-    u8              ls_bits = mem.read_byte(tile_addr + 2 * line);
-    u8              ms_bits = mem.read_byte(tile_addr + 2 * line + 1);
+    array<std::pair<Color, Color_Platte>, 8> result;
+    u8 ls_bits = mem.read_byte(tile_addr + 2 * line);
+    u8 ms_bits = mem.read_byte(tile_addr + 2 * line + 1);
     for (int i = 0; i < 8; i++) {
         u8 color_num = ((ms_bits & 0x80) | ((ls_bits & 0x80) >> 1)) >> 6;
-        result[i]    = color_num;
+        result[i]    = { color_num, platte };
         ls_bits      = ls_bits << 1;
         ms_bits      = ms_bits << 1;
     }
@@ -87,14 +87,15 @@ lcdc_bg_line(u8 lcdc, u8 top_pixel, u8 left_pixel)
     else {
         auto bg_tile_map = get_bit(lcdc, 3) ? 0x9c00 : 0x9800;
         for (int ix = 0; ix < 32; ix++) {
-            u16  offset    = 32 * std::floor(top_pixel / 8) + (left_pixel + ix) % 32;
-            u8   chr       = mem.buf[bg_tile_map + offset];
-            u16  tile_addr = get_bit(lcdc, 4) ? 0x8000 + 16 * chr : 0x9000 + 16 * (s8)chr;
-            auto color_line = get_tile_line(mem, tile_addr, top_pixel % 8);
-            for (int tx = 0; tx < 8; tx++)
-                result[8 * ix + tx] = { color_line[tx], Color_Platte::BG };
-            // ((array<Color, 8>*)result.data())[ix] =
-            // get_tile_line(mem, tile_addr, top_pixel % 8);
+            u16 offset    = 32 * std::floor(top_pixel / 8) + (left_pixel + ix) % 32;
+            u8  chr       = mem.buf[bg_tile_map + offset];
+            u16 tile_addr = get_bit(lcdc, 4) ? 0x8000 + 16 * chr : 0x9000 + 16 * (s8)chr;
+            // auto color_line =
+            // get_tile_line<Color_Platte::BG>(mem, tile_addr, top_pixel % 8);
+            // for (int tx = 0; tx < 8; tx++)
+            // result[8 * ix + tx] = { color_line[tx], Color_Platte::BG };
+            ((array<std::pair<Color, Color_Platte>, 8>*)result.data())[ix] =
+                get_tile_line<Color_Platte::BG>(mem, tile_addr, top_pixel % 8);
         }
     }
     return result;
@@ -113,51 +114,92 @@ struct Sprite {
        Bit3   Tile VRAM-Bank  **CGB Mode Only**     (0=Bank 0, 1=Bank 1)
        Bit2-0 Palette number  **CGB Mode Only**     (OBP0-7)
     */
+    enum Flags { OBP1 = 4, X_FLIP, Y_FLIP, BG_PRIORITY };
     u8 flags;
 };
 
 // array<Color, 160>
-array<u8, 10>
+std::pair<array<u8, 10>, u8>
 lcdc_obj_line(u8 lcdc, u8 top_pixel)
 {
-    const auto    sprite_size   = get_bit(lcdc, 2) ? 16 : 8;
+    const u8      sprite_size   = get_bit(lcdc, 2) ? 16 : 8;
     const Sprite* obj_atr_table = (Sprite*)&mem.buf[0xfe00];
 
-    array<u8, 40> sprite_ids;
+    u8 sprite_ids[40];
     for (int i = 0; i < 40; i++) sprite_ids[i] = i;
 
-    std::sort(sprite_ids.begin(), sprite_ids.end(), [=](auto i1, auto i2) {
-        // move to right all sprites which arent in the current scanline
-        // and give priority to left ones
-        bool i2_not_inline = (obj_atr_table[i2].y >= top_pixel &&
-                              obj_atr_table[i2].y + sprite_size <= top_pixel);
-        return i2_not_inline || obj_atr_table[i1].x < obj_atr_table[i2].x ||
+    int il, ir;
+    for (il = 0, ir = 39; il < ir;) {
+        int  ir_top        = static_cast<int>(obj_atr_table[sprite_ids[ir]].y) - 16;
+        bool ir_not_inline = (ir_top > top_pixel) || (ir_top + sprite_size < top_pixel);
+        if (ir_not_inline) {
+            ir--;
+            continue;
+        }
+
+        int  il_top        = static_cast<int>(obj_atr_table[sprite_ids[il]].y) - 16;
+        bool il_not_inline = (il_top > top_pixel) || (il_top + sprite_size < top_pixel);
+        if (il_not_inline) {
+            std::swap(sprite_ids[il++], sprite_ids[ir--]);
+            continue;
+        }
+
+        il++;
+    }
+
+    if (il == ir) {
+        int  ir_top        = static_cast<int>(obj_atr_table[sprite_ids[ir]].y) - 16;
+        bool ir_not_inline = (ir_top > top_pixel) || (ir_top + sprite_size < top_pixel);
+        if (ir_not_inline)
+            ir--;
+        else {
+            int  il_top = static_cast<int>(obj_atr_table[sprite_ids[il]].y) - 16;
+            bool il_not_inline =
+                (il_top > top_pixel) || (il_top + sprite_size < top_pixel);
+            if (il_not_inline)
+                std::swap(sprite_ids[il++], sprite_ids[ir--]);
+        }
+    }
+
+    auto comp = [=](u8 i1, u8 i2) {
+        // move to right all sprites which arent in
+        // the current scanline and give priority to left ones
+        return (obj_atr_table[i1].x < obj_atr_table[i2].x) || //
                (obj_atr_table[i1].x == obj_atr_table[i2].x && i1 < i2);
-    });
-    return *(array<u8, 10>*)(&sprite_ids[0]);
+    };
+
+    std::nth_element(sprite_ids,
+                     &sprite_ids[std::min(ir, 10)],
+                     &sprite_ids[ir + 1],
+                     comp);
+    std::sort(sprite_ids, &sprite_ids[std::min(ir + 1, 10)], comp);
+    return { *(array<u8, 10>*)sprite_ids, ir + 1 };
 }
 
 array<std::pair<Color, Color_Platte>, 160>
 lcdc_render_obj(u8                                         lcdc,
                 u8                                         iy,
-                const array<u8, 10>&                       sprite_ids,
+                const std::pair<array<u8, 10>, u8>&        sprite_ids,
                 array<std::pair<Color, Color_Platte>, 160> line)
 {
     const auto    sprite_size   = get_bit(lcdc, 2) ? 16 : 8;
     const Sprite* obj_atr_table = (Sprite*)&mem.buf[0xfe00];
 
-    for (int i = 9; i <= 0; i--) {
-        auto sprite = obj_atr_table[sprite_ids[i]];
-        // printf("%d  ", sprite_ids[i]);
-        u16 tile_addr = 0x8000 + 2 * sprite_size * sprite.tile;
+    for (int i = sprite_ids.second - 1; i >= 0; i--) {
+        const auto& sprite    = obj_atr_table[sprite_ids.first[i]];
+        u16         tile_addr = 0x8000 + 2 * sprite_size * sprite.tile;
 
-        Color_Platte platte =
-            get_bit(sprite.flags, 4) ? Color_Platte::PLATTE1 : Color_Platte::PLATTE0;
-        auto sprite_line = get_tile_line(mem, tile_addr, iy % sprite_size);
-        for (int xi = 0; xi < 8; xi++)
-            if (sprite_line[xi])
-                line[sprite.x + xi] = { sprite_line[xi], platte };
+        if (get_bit(sprite.flags, Sprite::OBP1))
+            *((array<std::pair<Color, Color_Platte>, 8>*)&line[sprite.x - 8]) =
+                get_tile_line<Color_Platte::OBP1>(mem, tile_addr, iy % sprite_size);
+        else
+            *((array<std::pair<Color, Color_Platte>, 8>*)&line[sprite.x - 8]) =
+                get_tile_line<Color_Platte::OBP0>(mem, tile_addr, iy % sprite_size);
+
+        auto& curr_line =
+            *((array<std::pair<Color, Color_Platte>, 8>*)&line[sprite.x - 8]);
+        if (get_bit(sprite.flags, Sprite::X_FLIP))
+            std::reverse(curr_line.begin(), curr_line.end());
     }
-    // printf("\n");
     return line;
 }
