@@ -101,8 +101,18 @@ halt()
 {
     u8 cc = 1;
 
-    // printf("halt\n");
     cpu.halt = true;
+
+    return cc;
+}
+
+static inline u8
+stop()
+{
+    u8 cc = 1;
+
+    printf("stop\n");
+    cpu.stop = true;
 
     return cc;
 }

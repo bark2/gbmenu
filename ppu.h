@@ -2,13 +2,13 @@
 
 #include "bits.h"
 #include "cpu.h"
-#include "mem.h"
+// #include "mem.h"
 #include <cassert>
 #include <cstdio>
 #include <iostream>
 #include <thread>
 
-using Color    = u8;
+using Color = u8;
 using RgbColor = u32;
 
 constexpr u32 vertical_refresh_clocks = 70224; // dbg mode
@@ -85,17 +85,36 @@ stat_ask_hblank(u8 stat)
 
 //
 
-array<Color, 160>
-lcdc_render_line(u8 lcdc, u8 top, u8 left, const array<u8, 10>& sprites);
-// array<Color, 160> lcdc_obj_line(u8 lcdc, u8 top_pixel, array<Color, 160> line);
-std::pair<array<u8, 10>, u8> lcdc_obj_line(u8 lcdc, u8 top_pixel);
+array<Color, 160> lcdc_render_line(u8 lcdc, u8 top, u8 left, const array<u8, 10>& sprites);
+
+std::pair<array<u8, 10>, u8> lcdc_sprite_line(u8 lcdc, u8 top_pixel);
+auto lcdc_get_next_sprite(u8 lcdc, u8 top_pixel, u8 last_obj_idx) -> u8;
 
 enum class Color_Platte { BG, OBP0, OBP1 };
 array<std::pair<Color, Color_Platte>, 160> lcdc_bg_line(u8 lcdc, u8 top, u8 left);
-// array<RgbColor, 160> render_line(const array<Color, 160>& line, Color_Platte cp);
+auto lcdc_window_line(u8 lcdc, u16 top_pixel, u16 left_pixel, array<std::pair<Color, Color_Platte>, 160>& line) -> void;
+
+array<RgbColor, 8> render_tile_line(const array<std::pair<Color, Color_Platte>, 8>& line);
 array<RgbColor, 160> render_line(const array<std::pair<Color, Color_Platte>, 160>& line);
-array<std::pair<Color, Color_Platte>, 160>
-lcdc_render_obj(u8                                         lcdc,
-                u8                                         iy,
-                const std::pair<array<u8, 10>, u8>&        sprite_ids,
-                array<std::pair<Color, Color_Platte>, 160> line);
+
+array<std::pair<Color, Color_Platte>, 8> lcdc_render_sprite(u8 lcdc, u8 sprite_idx, u8 iy);
+auto lcdc_render_sprites(u8 lcdc,
+                         u8 iy,
+                         const std::pair<array<u8, 10>, u8>& sprite_ids,
+                         array<std::pair<Color, Color_Platte>, 160>& line) -> array<std::pair<Color, Color_Platte>, 160>;
+
+struct Object {
+    u8 y;
+    u8 x;
+    u8 tile;
+    /* Bit7   OBJ-to-BG Priority (0=OBJ Above BG, 1=OBJ Behind BG color 1-3)
+       (Used for both BG and Window. BG color 0 is always behind OBJ)
+       Bit6   Y flip          (0=Normal, 1=Vertically mirrored)
+       Bit5   X flip          (0=Normal, 1=Horizontally mirrored)
+       Bit4   Palette number  **Non CGB Mode Only** (0=OBP0, 1=OBP1)
+       Bit3   Tile VRAM-Bank  **CGB Mode Only**     (0=Bank 0, 1=Bank 1)
+       Bit2-0 Palette number  **CGB Mode Only**     (OBP0-7)
+    */
+    enum Flags { OBP1 = 4, X_FLIP, Y_FLIP, BG_PRIORITY };
+    u8 flags;
+};

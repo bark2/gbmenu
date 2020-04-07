@@ -1,95 +1,68 @@
 #include <QApplication>
+#include <QBoxLayout>
+#include <QGridLayout>
 #include <QImage>
 #include <QKeyEvent>
+#include <QLabel>
 #include <QPainter>
+
 #include <QSplitter>
 #include <QTimer>
+#include <QVBoxLayout>
 #include <QWidget>
-
+#include <QtGlobal>
 #include <atomic>
+#include <qboxlayout.h>
+#include <qframe.h>
+#include <qlabel.h>
 #include <qnamespace.h>
+#include <qobject.h>
+#include <qwidget.h>
 
-#include "gui.h"
+#include <vector>
+
+#include "gui_.h"
 #include "mem.h"
 #include "types.h"
 
 class Lcd_Widget : public Image_Widget<lcd_width, lcd_height> {
+    std::atomic<bool>& update;
+
 public:
-    Joypad_Callback callback;
-
-    Lcd_Widget(const array<array<u32, lcd_width>, lcd_height>& pixels, Joypad_Callback cb)
-        : Image_Widget<lcd_width, lcd_height>(pixels), callback(cb)
+    Lcd_Widget(const array<array<u32, lcd_width>, lcd_height>& pixels, std::atomic<bool>& _update)
+        : Image_Widget<lcd_width, lcd_height>(pixels), update(_update)
     {
     }
 
     void
-    keyPressEvent(QKeyEvent* event) override
+    paintEvent(QPaintEvent* event) override
     {
-        Memory::Joypad key = (Memory::Joypad)-1;
-        switch (event->key()) {
-        case Qt::Key_L: key = Memory::Joypad::RIGHT; break;
-        case Qt::Key_J: key = Memory::Joypad::LEFT; break;
-        case Qt::Key_I: key = Memory::Joypad::UP; break;
-        case Qt::Key_K: key = Memory::Joypad::DOWN; break;
+        if (!update)
+            return;
 
-        case Qt::Key_S: key = Memory::Joypad::A; break;
-        case Qt::Key_D: key = Memory::Joypad::B; break;
-        case Qt::Key_Space: key = Memory::Joypad::SELECT; break;
-        case Qt::Key_P: key = Memory::Joypad::START; break;
-        // case Qt::Key_Escape: break;
-        default: QWidget::keyPressEvent(event);
-        }
-
-        if (key != (Memory::Joypad)-1)
-            callback(key, false);
-    }
-
-    void
-    keyReleaseEvent(QKeyEvent* event) override
-    {
-        Memory::Joypad key = (Memory::Joypad)-1;
-        switch (event->key()) {
-        case Qt::Key_L: key = Memory::Joypad::RIGHT; break;
-        case Qt::Key_J: key = Memory::Joypad::LEFT; break;
-        case Qt::Key_I: key = Memory::Joypad::UP; break;
-        case Qt::Key_K: key = Memory::Joypad::DOWN; break;
-
-        case Qt::Key_S: key = Memory::Joypad::A; break;
-        case Qt::Key_D: key = Memory::Joypad::B; break;
-        case Qt::Key_Space: key = Memory::Joypad::SELECT; break;
-        case Qt::Key_P: key = Memory::Joypad::START; break;
-        // case Qt::Key_Escape: break;
-        default: QWidget::keyPressEvent(event);
-        }
-
-        if (key != (Memory::Joypad)-1)
-            callback(key, true);
+        update = false;
+        QPainter painter(this);
+        QImage qimage(image, lcd_width, lcd_height, QImage::Format_RGB32);
+        painter.drawImage(0, 0, qimage.scaled(scale_factor * lcd_width, scale_factor * lcd_height));
     }
 };
 
 void
-gui_start(std::atomic<bool>&                              is_gui_alive,
-          int                                             argc,
-          char*                                           argv[],
-          const array<array<u32, lcd_width>, lcd_height>& pixels,
-          Joypad_Callback                                 callback)
+gui_start(int argc, char* argv[], Gui& gui)
 {
     QApplication q_app(argc, argv);
-    QSplitter    splitter {};
+    Main_Window main_window(gui);
+    Lcd_Widget* lcd = new Lcd_Widget(gui.lcd, gui.update_lcd);
 
-    Lcd_Widget*                          lcd = new Lcd_Widget(pixels, callback);
-    // Image_Widget<lcd_width, lcd_height>* vram =
-        // new Image_Widget<lcd_width, lcd_height>(pixels);
+    Oam* oam = new Oam(gui);
+    QHBoxLayout* layout = new QHBoxLayout;
+    layout->addWidget(lcd);
+    layout->addWidget(oam);
+    main_window.setLayout(layout);
+    main_window.show();
 
-    splitter.setWindowTitle("gbmenu");
-    splitter.resize(scale_factor * lcd_width, scale_factor * lcd_height);
-    splitter.addWidget(lcd);
-
-    // splitter.addWidget(vram);
-    // splitter.setSizes({ scale_factor * lcd_width, scale_factor * lcd_width });
-
-    splitter.show();
-
+    // gui.app = qobject_cast<QObject*>(&q_app);
+    gui.app = qobject_cast<QObject*>(oam);
     q_app.exec();
-    is_gui_alive = false;
+    gui.alive = false;
 }

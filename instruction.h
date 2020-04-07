@@ -3,15 +3,11 @@
 #include "types.h"
 
 struct Instruction {
-    u8     length;
+    u8 length;
     string mnemonic;
     u8 (*fun)();
 };
 
-static inline u8
-unimplemented()
-{
-    return 255;
-}
+u8 illegal();
 
 extern Instruction prefix_cb_instructions[], instructions[];

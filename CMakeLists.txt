@@ -21,5 +21,5 @@ add_executable(gbmenu
     instruction.cc
 )
 
-target_compile_options(gbmenu PRIVATE -O0 -Wall -g)
+target_compile_options(gbmenu PRIVATE -O0 -Wall -Wextra -Wstrict-overflow -g)
 target_link_libraries(gbmenu Qt5::Widgets Threads::Threads)

@@ -10,7 +10,6 @@
 #include "instruction.h"
 
 struct Cpu {
-    u32 cc;
     u16 sp, pc;
     union {
         u8 registers[16];
@@ -45,17 +44,21 @@ struct Cpu {
             };
         };
     };
-    u8   last_cc;
+    u32 cycles;
+    u8 last_inst_cycle;
     bool int_master_enable; // enable the jump to the interrupt vectors.
     bool halt;
 
+    bool stop;
+    Time_Point stop_cc;
+
     void boot_sequence(Memory& mem);
 
-    enum class Interupt { VBLANK = 0, LCD_STAT, TIMER, SERIAL, JOYPAD };
+    enum class Interupt { V_BLANK = 0, LCD_STAT, TIMER, SERIAL, JOYPAD };
     void set_interupt(Interupt i);
 
     enum Flag : u8 { C = 4, H = 5, N = 6, Z = 7 };
-    u8   get_flag(Flag flag);
+    u8 get_flag(Flag flag);
     void set_flag(u8 flag, bool value);
     void set_c_flag(bool value);
     void set_h_flag(bool value);
@@ -66,7 +69,7 @@ struct Cpu {
     bool exec();
 
     friend std::ostream& operator<<(std::ostream& o, const Cpu& cpu);
-    friend string        to_string(const Cpu& cpu);
+    friend string to_string(const Cpu& cpu);
 };
 
 extern Cpu cpu;
