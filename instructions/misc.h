@@ -111,7 +111,6 @@ stop()
 {
     u8 cc = 1;
 
-    printf("stop\n");
     cpu.stop = true;
 
     return cc;

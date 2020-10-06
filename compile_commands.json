@@ -1,27 +1,27 @@
 [
 {
   "directory": "/home/bar/src/gbmenu/build",
-  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O2 -Wall -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/gb.cc.o -c /home/bar/src/gbmenu/gb.cc",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O0 -Wall -Wextra -Wstrict-overflow -g -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/gb.cc.o -c /home/bar/src/gbmenu/gb.cc",
   "file": "/home/bar/src/gbmenu/gb.cc"
 },
 {
   "directory": "/home/bar/src/gbmenu/build",
-  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O2 -Wall -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/cpu.cc.o -c /home/bar/src/gbmenu/cpu.cc",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O0 -Wall -Wextra -Wstrict-overflow -g -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/cpu.cc.o -c /home/bar/src/gbmenu/cpu.cc",
   "file": "/home/bar/src/gbmenu/cpu.cc"
 },
 {
   "directory": "/home/bar/src/gbmenu/build",
-  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O2 -Wall -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/ppu.cc.o -c /home/bar/src/gbmenu/ppu.cc",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O0 -Wall -Wextra -Wstrict-overflow -g -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/ppu.cc.o -c /home/bar/src/gbmenu/ppu.cc",
   "file": "/home/bar/src/gbmenu/ppu.cc"
 },
 {
   "directory": "/home/bar/src/gbmenu/build",
-  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O2 -Wall -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/gui.cc.o -c /home/bar/src/gbmenu/gui.cc",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O0 -Wall -Wextra -Wstrict-overflow -g -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/gui.cc.o -c /home/bar/src/gbmenu/gui.cc",
   "file": "/home/bar/src/gbmenu/gui.cc"
 },
 {
   "directory": "/home/bar/src/gbmenu/build",
-  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O2 -Wall -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/instruction.cc.o -c /home/bar/src/gbmenu/instruction.cc",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -isystem /usr/include/qt -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtCore -isystem /usr/lib/qt/mkspecs/linux-g++    -O0 -Wall -Wextra -Wstrict-overflow -g -fPIC -pthread -std=gnu++2a -o CMakeFiles/gbmenu.dir/instruction.cc.o -c /home/bar/src/gbmenu/instruction.cc",
   "file": "/home/bar/src/gbmenu/instruction.cc"
 }
 ]

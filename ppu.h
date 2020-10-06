@@ -90,18 +90,18 @@ array<Color, 160> lcdc_render_line(u8 lcdc, u8 top, u8 left, const array<u8, 10>
 std::pair<array<u8, 10>, u8> lcdc_sprite_line(u8 lcdc, u8 top_pixel);
 auto lcdc_get_next_sprite(u8 lcdc, u8 top_pixel, u8 last_obj_idx) -> u8;
 
-enum class Color_Platte { BG, OBP0, OBP1 };
-array<std::pair<Color, Color_Platte>, 160> lcdc_bg_line(u8 lcdc, u8 top, u8 left);
-auto lcdc_window_line(u8 lcdc, u16 top_pixel, u16 left_pixel, array<std::pair<Color, Color_Platte>, 160>& line) -> void;
+enum class Color_Palette { BG, OBP0, OBP1 };
+array<std::pair<Color, Color_Palette>, 160> lcdc_bg_line(u8 lcdc, u8 top, u8 left);
+auto lcdc_window_line(u8 lcdc, u16 top_pixel, u16 left_pixel, array<std::pair<Color, Color_Palette>, 160>& line) -> void;
 
-array<RgbColor, 8> render_tile_line(const array<std::pair<Color, Color_Platte>, 8>& line);
-array<RgbColor, 160> render_line(const array<std::pair<Color, Color_Platte>, 160>& line);
+array<RgbColor, 8> render_tile_line(const array<std::pair<Color, Color_Palette>, 8>& line);
+array<RgbColor, 160> render_line(const array<std::pair<Color, Color_Palette>, 160>& line);
 
-array<std::pair<Color, Color_Platte>, 8> lcdc_render_sprite(u8 lcdc, u8 sprite_idx, u8 iy);
+array<std::pair<Color, Color_Palette>, 8> lcdc_render_sprite(u8 lcdc, u8 sprite_idx, u8 iy);
 auto lcdc_render_sprites(u8 lcdc,
                          u8 iy,
                          const std::pair<array<u8, 10>, u8>& sprite_ids,
-                         array<std::pair<Color, Color_Platte>, 160>& line) -> array<std::pair<Color, Color_Platte>, 160>;
+                         array<std::pair<Color, Color_Palette>, 160>& line) -> array<std::pair<Color, Color_Palette>, 160>;
 
 struct Object {
     u8 y;

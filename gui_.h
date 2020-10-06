@@ -17,6 +17,7 @@
 #include <QObject>
 
 #include <cstdio>
+#include <qboxlayout.h>
 #include <qnamespace.h>
 #include <qobject.h>
 #include <qobjectdefs.h>
@@ -55,21 +56,23 @@ struct Gui {
     }
 };
 
-template <u32 Width, u32 Height> class Image_Widget : public QWidget {
+template <u32 Width, u32 Height, size_t Stride> class Image_Widget : public QWidget {
 public:
-    const uchar* image;
+    const u32* image;
+    u32 idx;
 
     void
     paintEvent(QPaintEvent* event) override
     {
         QPainter painter(this);
-        QImage qimage(image, Width, Height, QImage::Format_RGB32);
+        auto bytes_per_line = 4 * Stride * Width;
+        QImage qimage((uchar const*)(image + idx * Width * Height), Width, Height, bytes_per_line, QImage::Format_RGB32);
         painter.drawImage(0, 0, qimage.scaled(scale_factor * Width, scale_factor * Height));
     }
 
     Image_Widget() = delete;
 
-    Image_Widget(const array<array<u32, Width>, Height>& _image) : image((const uchar*)_image.data())
+    Image_Widget(const u32* _image) : image(_image)
     {
         setFocusPolicy(Qt::StrongFocus);
         QTimer* timer = new QTimer(this);
@@ -113,14 +116,14 @@ public:
     void
     update()
     {
-        const Object* obj_atr_table = (Object*)&mem.buf[0xfe00];
+        const Object* obj_atr_table = (Object*)&mem.get_ref(0xfe00);
         auto sprite = obj_atr_table[idx];
         static char info_text[100];
 
         sprintf(info_text,
                 "tile: 0x%x\n%s\n%s\n%s\n%s",
                 sprite.tile,
-                get_bit(sprite.flags, Object::OBP1) ? "platte: OBP1" : "platte: OBP0",
+                get_bit(sprite.flags, Object::OBP1) ? "OBP1" : "OBP0",
                 get_bit(sprite.flags, Object::X_FLIP) ? "X Flipped" : "N",
                 get_bit(sprite.flags, Object::Y_FLIP) ? "Y Flipped" : "N",
                 get_bit(sprite.flags, Object::BG_PRIORITY) ? "Behind BG" : "N");
@@ -228,7 +231,7 @@ public:
         layout->setSizeConstraint(QLayout::SetMinimumSize);
         for (u8 i = 0; i < 40; i++) {
             QFrame* obj = new QFrame;
-            // obj->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+            obj->setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
 
             QVBoxLayout* obj_layout = new QVBoxLayout;
             obj_layout->setSizeConstraint(QLayout::SetMinimumSize);

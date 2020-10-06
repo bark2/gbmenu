@@ -25,15 +25,15 @@ info(Cpu& cpu, Memory& mem, u16 pc = 0xffff)
     if (pc == 0xffff)
         pc = cpu.pc;
 
-    bool is_pcb = mem.buf[pc] == 0xcb;
-    auto inst = (is_pcb ? prefix_cb_instructions[mem.buf[pc + 1]] : instructions[mem.buf[pc]]);
+    bool is_pcb = (mem.get(pc) == 0xcb);
+    auto inst = (is_pcb ? prefix_cb_instructions[mem.get(pc + 1)] : instructions[mem.get(pc)]);
 
     result += to_string(cpu);
     // interupt registers
-    result += "ie: " + conv_byte_hex(mem.buf[reg_ie]) + "  if: " + conv_byte_hex(mem.buf[reg_if]) +
+    result += "ie: " + conv_byte_hex(mem.get(reg_ie)) + "  if: " + conv_byte_hex(mem.get(reg_if)) +
               "  ime: " + (cpu.int_master_enable ? "1" : "0") + '\n';
-    result += "lcdc: " + conv_byte_hex(mem.buf[reg_lcdc]) + "  stat: " + conv_byte_hex(mem.buf[reg_stat]) +
-              "  ly: " + conv_byte_hex(mem.buf[reg_ly]) + '\n';
+    result += "lcdc: " + conv_byte_hex(mem.get(reg_lcdc)) + "  stat: " + conv_byte_hex(mem.get(reg_stat)) +
+              "  ly: " + conv_byte_hex(mem.get(reg_ly)) + '\n';
     result += conv_word_hex(pc) + "[opcode: 0x";
     u8 op_length = (is_pcb ? 2 : 1);
     for (int i = 0; i < op_length; i++) result += conv_byte_hex(mem.read_byte(pc + i));
@@ -49,8 +49,6 @@ Memory mem;
 Cpu cpu;
 
 // TODO:
-// mark all used instructions in test and make sure they are currect.
-// dont optimize cc for instructions
 // more on z80 cc: https://8bitnotes.com/2017/05/z80-timing/
 // add a gui to see the ram values
 
@@ -77,6 +75,7 @@ cli()
     } break;
     }
 }
+
 bool print_ = false;
 
 int
@@ -95,10 +94,11 @@ main(int argc, char* argv[])
     // auto err = mem.init("../cpu_instrs_tests/individual/11-op a,(hl).gb"); // ok
     // auto err = mem.init("../cpu_instrs_tests/cpu_instrs.gb"); // ok
 
+    auto err = mem.init("../rom/Dr. Mario (JU) (V1.1).gb"); // ROM ONLY
+    // auto err = mem.init("../rom/Asteroids (U).gb");
     // auto err = mem.init("../rom/tetris.gb");
     // auto err = mem.init("../rom/pokemon-blue.gb");
-    // auto err = mem.init("../rom/bubble bobble (u) (gb) [h1].gb");
-    auto err = mem.init("../rom/Dr. Mario (JU) (V1.1).gb");
+    // auto err = mem.init("../rom/bubble bobble (u) (gb) [h1].gb"); // MBC1
 
     if (err)
         return 1;
@@ -141,50 +141,47 @@ main(int argc, char* argv[])
 
         // if (gui.pause)
         // breakpoint.reached = true;
+
         if (!strcmp(breakpoint.reg, "pc") && cpu.pc == breakpoint.val)
-            breakpoint.reached = true;
-        else if (!strcmp(breakpoint.reg, "pc") && cpu.pc == breakpoint.val)
             breakpoint.reached = true;
         else if (!strcmp(breakpoint.reg, "sp") && cpu.sp == breakpoint.val)
             breakpoint.reached = true;
         else if (!strcmp(breakpoint.reg, "a") && cpu.a == breakpoint.val)
             breakpoint.reached = true;
-        else if (!strcmp(breakpoint.reg, "ly") && mem.buf[reg_ly] == breakpoint.val)
+        else if (!strcmp(breakpoint.reg, "ly") && mem.get(reg_ly) == breakpoint.val)
             breakpoint.reached = true;
 
         if (breakpoint.reached)
             cli();
 
-        // if (cpu.stop) {
-        //     Time_Point last = now();
-        //     while (cpu.stop) {
-        //         auto dt = Cycle_Duration(2 * 4 * 114) - (now() - last);
-        //         std::this_thread::sleep_for(dt);
-        //         last = now();
-        //     }
-        //     cpu.cycles += 217;
-        // }
-        // else
-        if (cpu.halt) {
+        if (cpu.stop) {
+            Time_Point last = now();
+            while (cpu.stop) {
+                auto dt = Cycle_Duration(2 * 4 * 114) - (now() - last);
+                std::this_thread::sleep_for(dt);
+                last = now();
+            }
+            cpu.cycles += 217;
+        }
+        else if (cpu.halt) {
             cpu.cycles++;
         }
-        else if (cpu.handle_interupts()) {
+
+        auto interrupted = cpu.handle_interupts();
+        if (interrupted) {
             cpu.cycles++;
             cpu.last_inst_cycle = 1;
         }
-        else {
-            if (cpu.exec())
-                ;
-            // breakpoint.reached = true; // break on illegal instruction
-            // std::cout << info(cpu, mem) << "\n>>>";
-        }
+        else if (cpu.exec())
+            breakpoint.reached = true; // break on illegal instruction
+        // std::cout << info(cpu, mem) << "\n>>>";
 
         // hardware
-        run_with_freq(divider, divider.freq, [&]() { mem.buf[reg_div]++; });
+        run_with_freq(divider, divider.freq, [&]() { mem.get_ref(reg_div)++; });
 
-        if (get_bit(mem.buf[reg_tac], 2)) {
+        if (get_bit(mem.get(reg_tac), 2)) {
             u32 timer_freq;
-            switch (mem.buf[reg_tac] & 0b11) {
+            switch (mem.get(reg_tac) & 0b11) {
             case 0b00: timer_freq = cpu_freq / 1024; break;
             case 0b01: timer_freq = cpu_freq / 16; break;
             case 0b10: timer_freq = cpu_freq / 64; break;
@@ -192,21 +189,21 @@ main(int argc, char* argv[])
             }
 
             run_with_freq(timer, timer_freq, []() {
-                mem.buf[reg_tima]++;
-                if (!mem.buf[reg_tima]) {
-                    mem.buf[reg_tima] = mem.buf[reg_tma];
+                mem.get_ref(reg_tima)++;
+                if (!mem.get(reg_tima)) {
+                    mem.get_ref(reg_tima) = mem.get(reg_tma);
                     cpu.set_interupt(Cpu::Interupt::TIMER);
                 }
             });
         }
 
-        auto lcdc = mem.buf[reg_lcdc];
-        if (true || lcdc_is_enabled(lcdc)) {
-            while (cpu.cycles >= lcd.cycles) {
-                u8 stat = mem.buf[reg_stat];
+        auto lcdc = mem.get(reg_lcdc);
+        if (lcdc_is_enabled(lcdc)) {
+            while (cpu.cycles > lcd.cycles) {
+                u8 stat = mem.get(reg_stat);
                 Screen_Mode mode = (Screen_Mode)(stat & 0b11);
-                const u8 ly = mem.buf[reg_ly];
-                const u8 lyc = mem.buf[reg_lyc];
+                const u8 ly = mem.get(reg_ly);
+                const u8 lyc = mem.get(reg_lyc);
 
                 // coincidence
                 const bool coincidence = (ly == lyc);
@@ -215,14 +212,14 @@ main(int argc, char* argv[])
                     cpu.set_interupt(Cpu::Interupt::LCD_STAT);
 
                 if (ly < 144) {
-                    const u8 scx = mem.buf[reg_scx];
-                    const u8 scy = mem.buf[reg_scy];
+                    const u8 scx = mem.get(reg_scx);
+                    const u8 scy = mem.get(reg_scy);
 
                     assert(mode != Screen_Mode::V_BLANK);
                     switch (mode) {
                     case Screen_Mode::OAM: {
                         if (!(lcd.cycles % (114 * 4)))
-                            sprite_ids = lcdc_sprite_line(lcdc, (ly + scy) % 256);
+                            sprite_ids = lcdc_sprite_line(lcdc, ly);
                         lcd.cycles += 2;
                         if (lcd.cycles % (114 * 4) == 80)
                             mode = Screen_Mode::TRANSFARING;
@@ -231,14 +228,14 @@ main(int argc, char* argv[])
                         if (lcd.cycles % (114 * 4) == 80) {
                             auto color_line = lcdc_bg_line(lcdc, (ly + scy) % 256, scx);
                             if (lcdc_window_enabled(lcdc)) {
-                                const u8 wx = mem.buf[reg_wx];
-                                const u8 wy = mem.buf[reg_wy];
+                                const u8 wx = mem.get(reg_wx);
+                                const u8 wy = mem.get(reg_wy);
                                 // if (!(wx >= 7 && wx <= 166 && wy <= 143))
                                 // printf("Warning: !(wx >= 7 && wx <= 166 && wy <= 143), wx: %u, wy: %u\n", wx, wy);
                                 lcdc_window_line(lcdc, ly + wy, wx - 7, color_line);
                             }
                             if (lcdc_obj_enabled(lcdc))
-                                color_line = lcdc_render_sprites(lcdc, (ly + scy) % 256, sprite_ids, color_line);
+                                color_line = lcdc_render_sprites(lcdc, ly, sprite_ids, color_line);
                             gui.lcd[ly] = render_line(color_line);
                         }
                         lcd.cycles += 2;
@@ -265,15 +262,15 @@ main(int argc, char* argv[])
                                 if (stat_ask_oam(stat))
                                     cpu.set_interupt(Cpu::Interupt::LCD_STAT);
                             }
-                            mem.buf[reg_ly] = (ly + 1) % 154;
+                            mem.get_ref(reg_ly) = (ly + 1) % 154;
 
                             if (!(ly % 2)) {
                                 // update gui - 30fps
                                 gui.update_lcd = true;
                                 // sync to real time - 30fps
-                                auto dt = Cycle_Duration(2 * 4 * 114) - (now() - last_line_draw_time);
-                                std::this_thread::sleep_for(dt);
-                                last_line_draw_time = now();
+                                // auto dt = Cycle_Duration(2 * 4 * 114) - (now() - last_line_draw_time);
+                                // std::this_thread::sleep_for(dt);
+                                // last_line_draw_time = now();
                             }
                         }
                     } break;
@@ -287,12 +284,12 @@ main(int argc, char* argv[])
                     }
                     lcd.cycles += 2;
                     if (!(lcd.cycles % (114 * 4))) {
-                        mem.buf[reg_ly] = (ly + 1) % 154;
+                        mem.get_ref(reg_ly) = (ly + 1) % 154;
 
                         // update gui once a frame
                         if (gui.draw_oam) {
                             gui.update_oam = true;
-                            const auto sprite_size = get_bit(mem.buf[reg_lcdc], 2) ? 16 : 8;
+                            const auto sprite_size = get_bit(mem.get(reg_lcdc), 2) ? 16 : 8;
                             for (u8 sprite_idx = 0; sprite_idx < 40; sprite_idx++)
                                 for (u8 li = 0; li < sprite_size; li++)
                                     gui.oam[sprite_idx][li] = render_tile_line(lcdc_render_sprite(sprite_size, sprite_idx, li));
@@ -315,25 +312,25 @@ main(int argc, char* argv[])
                     lcd.cycles += 2;
                     if (!(lcd.cycles % (114 * 4))) {
                         if (ly < 153)
-                            mem.buf[reg_ly] = ly + 1;
+                            mem.get_ref(reg_ly) = ly + 1;
                         else if (ly == 153 && lcd.cycles % 70224) {
                             continue;
                         }
                         else {
-                            mem.buf[reg_ly] = 0;
+                            mem.get_ref(reg_ly) = 0;
                             mode = Screen_Mode::OAM;
                             if (stat_ask_oam(stat))
                                 cpu.set_interupt(Cpu::Interupt::LCD_STAT);
                         }
                     }
                 }
-                mem.buf[reg_stat] = (stat & (~0b11)) | (u8)mode;
+                mem.get_ref(reg_stat) = (stat & (~0b11)) | ((u8)mode & 0b11);
             }
         } // lcd is enabled
 
         cpu.flags &= 0xf0;
-        mem.buf[reg_if] &= 0x1f;
-        mem.buf[reg_ie] &= 0x1f;
+        mem.get_ref(reg_if) &= 0x1f;
+        mem.get_ref(reg_ie) &= 0x1f;
     }
     return 0;
 }

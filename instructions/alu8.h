@@ -19,12 +19,12 @@ add()
 {
     u8 cc, rhs;
     if constexpr (imm) {
-        cc  = 2;
+        cc = 2;
         rhs = mem.read_byte(cpu.pc++);
     }
     else {
-        cc  = (src == HL ? 2 : 1);
-        rhs = get_reg8(src);
+        cc = (src == HL ? 2 : 1);
+        rhs = (src == HL ? mem.get(cpu.hl) : get_reg8(src));
     }
 
     u16 res = cpu.a + rhs;
@@ -42,16 +42,16 @@ adc()
 {
     u8 cc, rhs;
     if constexpr (imm) {
-        cc  = 2;
+        cc = 2;
         rhs = mem.read_byte(cpu.pc++);
     }
     else {
-        cc  = (src == HL ? 2 : 1);
-        rhs = get_reg8(src);
+        cc = (src == HL ? 2 : 1);
+        rhs = (src == HL ? mem.get(cpu.hl) : get_reg8(src));
     }
 
-    auto c   = cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C;
-    u16  res = cpu.a + rhs + c;
+    auto c = cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C;
+    u16 res = cpu.a + rhs + c;
     cpu.set_z_flag(lower_byte(res) == 0x00);
     cpu.set_n_flag(false);
     cpu.set_h_flag((cpu.a & 0x0f) + (rhs & 0x0f) + c > 0xf);
@@ -66,12 +66,12 @@ sub()
 {
     u8 cc, rhs;
     if constexpr (imm) {
-        cc  = 2;
+        cc = 2;
         rhs = mem.read_byte(cpu.pc++);
     }
     else {
-        cc  = (src == HL ? 2 : 1);
-        rhs = get_reg8(src);
+        cc = (src == HL ? 2 : 1);
+        rhs = (src == HL ? mem.get(cpu.hl) : get_reg8(src));
     }
 
     u16 res = cpu.a - rhs;
@@ -89,15 +89,15 @@ sbc()
 {
     u16 cc, rhs;
     if constexpr (imm) {
-        cc  = 2;
+        cc = 2;
         rhs = mem.read_byte(cpu.pc++);
     }
     else {
-        cc  = (src == HL ? 2 : 1);
-        rhs = get_reg8(src);
+        cc = (src == HL ? 2 : 1);
+        rhs = (src == HL ? mem.get(cpu.hl) : get_reg8(src));
     }
 
-    u8  c   = cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C;
+    u8 c = cpu.get_flag(Cpu::Flag::C) >> Cpu::Flag::C;
     u16 res = cpu.a - rhs - c;
     cpu.set_z_flag((res & 0xff) == 0x00);
     cpu.set_n_flag(true);
@@ -114,12 +114,12 @@ and_inst()
 {
     u8 cc, rhs;
     if constexpr (imm) {
-        cc  = 2;
+        cc = 2;
         rhs = mem.read_byte(cpu.pc++);
     }
     else {
-        cc  = (src == HL ? 2 : 1);
-        rhs = get_reg8(src);
+        cc = (src == HL ? 2 : 1);
+        rhs = (src == HL ? mem.get(cpu.hl) : get_reg8(src));
     }
 
     u8 res = cpu.a & rhs;
@@ -137,12 +137,12 @@ or_inst()
 {
     u8 cc, rhs;
     if constexpr (imm) {
-        cc  = 2;
+        cc = 2;
         rhs = mem.read_byte(cpu.pc++);
     }
     else {
-        cc  = (src == HL ? 2 : 1);
-        rhs = get_reg8(src);
+        cc = (src == HL ? 2 : 1);
+        rhs = (src == HL ? mem.get(cpu.hl) : get_reg8(src));
     }
 
     u8 res = cpu.a | rhs;
@@ -160,12 +160,12 @@ xor_inst()
 {
     u8 cc, rhs;
     if constexpr (imm) {
-        cc  = 2;
+        cc = 2;
         rhs = mem.read_byte(cpu.pc++);
     }
     else {
-        cc  = (src == HL ? 2 : 1);
-        rhs = get_reg8(src);
+        cc = (src == HL ? 2 : 1);
+        rhs = (src == HL ? mem.get(cpu.hl) : get_reg8(src));
     }
 
     u8 res = cpu.a ^ rhs;
@@ -183,12 +183,12 @@ cp()
 {
     u8 cc, rhs;
     if constexpr (imm) {
-        cc  = 2;
+        cc = 2;
         rhs = mem.read_byte(cpu.pc++);
     }
     else {
-        cc  = (src == HL ? 2 : 1);
-        rhs = get_reg8(src);
+        cc = (src == HL ? 2 : 1);
+        rhs = (src == HL ? mem.get(cpu.hl) : get_reg8(src));
     }
 
     u16 res = cpu.a - rhs;
@@ -204,7 +204,7 @@ static inline u8
 inc()
 {
     auto& reg = get_reg8(src);
-    u16   res = reg + 1;
+    u16 res = reg + 1;
     cpu.set_z_flag(lower_byte(res) == 0x00);
     cpu.set_n_flag(false);
     cpu.set_h_flag((reg & 0x0f) == 0x0f);
@@ -217,7 +217,7 @@ static inline u8
 dec()
 {
     auto& reg = get_reg8(src);
-    u16   res = reg - 1;
+    u16 res = reg - 1;
     cpu.set_z_flag(lower_byte(res) == 0x00);
     cpu.set_n_flag(true);
     cpu.set_h_flag((reg & 0x0f) == 0x00);

@@ -36,8 +36,7 @@ get_reg8(u8 src)
     case H: return cpu.h;
     case L: return cpu.l;
     case HL:
-        // if (cpu.hl > 0xff00) printf("writing to io: %x\n", cpu.hl);
-        return mem.buf[cpu.hl];
+        return mem.get_ref(cpu.hl); // constexpr?
     case A: return cpu.a;
     default: assert(0);
     }

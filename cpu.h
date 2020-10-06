@@ -1,13 +1,16 @@
 #pragma once
 
+#include "mem.h"
 #include "types.h"
 #include <chrono>
 #include <iostream>
 #include <istream>
 
-#include "mem.h"
+// #include "mem.h"
 
 #include "instruction.h"
+
+struct Memory;
 
 struct Cpu {
     u16 sp, pc;
